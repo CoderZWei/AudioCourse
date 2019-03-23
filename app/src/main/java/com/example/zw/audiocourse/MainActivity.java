@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.zw.audiocourse.listener.OnInitListener;
 import com.example.zw.audiocourse.util.PermissionUtils;
 
 import java.io.File;
@@ -17,7 +18,8 @@ import java.io.FileNotFoundException;
 
 public class MainActivity extends AppCompatActivity {
     private Button mBtn;
-    FfmpegWrapper ffmpegWrapper;
+    //FfmpegWrapper ffmpegWrapper;
+    private MyPlayer mPlayer=null;
     private static final String audioPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"1.mp3";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,20 +27,26 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         PermissionUtils.requestPermissionsIfNeed(this);
         mBtn=(Button)findViewById(R.id.Btn_start);
-        ffmpegWrapper=FfmpegWrapper.getWrapper();
-        ffmpegWrapper.init(audioPath);
-        Toast.makeText(this,audioPath,Toast.LENGTH_SHORT).show();
-        try {
-            FileInputStream fileInputStream=new FileInputStream(audioPath);
+        mPlayer=new MyPlayer();
+        Log.e("zwLog", audioPath );
+        mPlayer.setOnInitListener(new OnInitListener() {
+            @Override
+            public void onInited() {
+               /* new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this,"init finished",Toast.LENGTH_SHORT).show();
+                    }
+                }).start();
+                */
+                mPlayer.start();
+            }
+        });
 
-        } catch (FileNotFoundException e) {
-            Log.e("zw:can't open:",audioPath);
-            e.printStackTrace();
-        }
         mBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ffmpegWrapper.start();
+                mPlayer.init(audioPath);
             }
         });
 

@@ -15,14 +15,14 @@ QueueUtil::QueueUtil(PlayStatusUtil *playStatusUtil) {
     pthread_cond_init(&this->condPacket,NULL);
 }
 
-void QueueUtil::pushAVPacket(AVPacket *packet) {
+void QueueUtil::putAVPacket(AVPacket *packet) {
     pthread_mutex_lock(&mutexPacket);//加锁
     this->queuePacket.push(packet);
     pthread_cond_signal(&this->condPacket);//释放信号量
     pthread_mutex_unlock(&mutexPacket);//解锁
 }
 
-void QueueUtil::popAVPacket(AVPacket *packet) {
+int QueueUtil::getAVPacket(AVPacket *packet) {
     pthread_mutex_lock(&mutexPacket);//加锁
     if(this->playStatusUtil!=NULL && this->playStatusUtil->getStatus()!= false){
         if(this->queuePacket.size()>0){
@@ -39,6 +39,7 @@ void QueueUtil::popAVPacket(AVPacket *packet) {
         }
     }
     pthread_mutex_unlock(&mutexPacket);//解锁
+    return 0;
 }
 
 int QueueUtil::getQueueSize() {

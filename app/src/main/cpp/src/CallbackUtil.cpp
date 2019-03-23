@@ -5,32 +5,42 @@
 #include "CallbackUtil.h"
 
 CallbackUtil::CallbackUtil(_JavaVM *javaVM1,JNIEnv *env,jobject *obj) {
-    this->javaVM=javaVM1;
-    this->jniEnv=env;
-    this->jobj=*obj;
-    this->jobj=env->GetObjectClass(jobj);
-    jclass jCls=this->jniEnv->GetObjectClass(this->jobj);
-    this->jmeth_id=jniEnv->GetMethodID(jCls,"onCallback","()V");
+    this->javaVM = javaVM;
+    this->jniEnv = env;
+    this->jobj = *obj;
+    this->jobj = env->NewGlobalRef(jobj);
+
+    jclass  jlz = jniEnv->GetObjectClass(jobj);
+    if(!jlz)
+    {
+        ALOGD("get jclass wrong");
+        return;
+    }
+
+    this->jmid_inited = env->GetMethodID(jlz, "onCallInit", "()V");
+
+
+    ALOGD("zw_jmid:%d",jmid_inited);
 }
 
 CallbackUtil::~CallbackUtil() {
 
 }
 
-void CallbackUtil::startCallback(int threadType) {
+void CallbackUtil::onCallInited(int threadType) {
     switch (threadType){
         //主线程里调用回调
         case MAIN_THREAD:
-            this->jniEnv->CallVoidMethod(this->jobj,this->jmeth_id);
+            this->jniEnv->CallVoidMethod(this->jobj,this->jmid_inited);
             break;
-        //子线程里调用回调
+            //子线程里调用回调
         case CHILD_THREAD:
             JNIEnv *jniEnv;
-            if(this->javaVM->AttachCurrentThread(&this->jniEnv,0)!=JNI_OK){
+            if(this->javaVM->AttachCurrentThread(&jniEnv,0)!=JNI_OK){
                 ALOGE("zw:get child thread JNIEnv errored");
                 return;
             }
-            this->jniEnv->CallVoidMethod(this->jobj,this->jmeth_id);
+            this->jniEnv->CallVoidMethod(this->jobj,this->jmid_inited);
             this->javaVM->DetachCurrentThread();
             break;
     }

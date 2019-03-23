@@ -8,7 +8,7 @@
 #include "queue"
 #include "PlayStatusUtil.h"
 extern "C"{
-    #include <libavcodec/avcodec.h>
+#include <libavcodec/avcodec.h>
 };
 
 
@@ -21,8 +21,8 @@ public:
     pthread_cond_t condPacket;
     PlayStatusUtil *playStatusUtil=NULL;
 
-    void pushAVPacket(AVPacket *packet);
-    void popAVPacket(AVPacket *packet);
+    void putAVPacket(AVPacket *packet);
+    int getAVPacket(AVPacket *packet);
     int getQueueSize();
     QueueUtil(PlayStatusUtil *playStatusUtil);
     ~QueueUtil();

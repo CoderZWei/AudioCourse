@@ -14,11 +14,14 @@ public:
     _JavaVM *javaVM=NULL;
     JNIEnv *jniEnv=NULL;
     jobject jobj;
-    jmethodID jmeth_id;
+
+
+    jmethodID jmid_inited;
 
     CallbackUtil(_JavaVM *javaVM1,JNIEnv *env,jobject *obj);
     ~CallbackUtil();
-    void startCallback(int threadType);
+    void onCallInited(int threadType);
+
 
 };
 #endif //AUDIOCOURSE_CALLBACKUTIL_H

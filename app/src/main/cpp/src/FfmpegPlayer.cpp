@@ -45,6 +45,7 @@ void FfmpegPlayer::init(const char *url) {
     if(avcodec_open2(audioPlayer->avCodecContext,dec,0)!=0){
         ALOGE("zw:can't open audio sreams");
     }
+    callbackUtil->onCallInited(MAIN_THREAD);
 }
 
 FfmpegPlayer::FfmpegPlayer() {
@@ -65,40 +66,51 @@ void FfmpegPlayer::startDecode() {
         ALOGE("zw:audioPlayer is null");
         return;
     }
+    audioPlayer->play();
     int count=0;
-    while (1){
+    while (playStatus!=NULL && playStatus->getStatus()== true ){
         AVPacket *avPacket=av_packet_alloc();
         if(av_read_frame(pFormaxCtx,avPacket)==0){
             if(avPacket->stream_index==audioPlayer->streamIndex){
                 count++;
                 ALOGD("zw:解码第%d帧",count);
-                this->audioPlayer->audioQueue->pushAVPacket(avPacket);
-                av_packet_free(&avPacket);
-                av_free(avPacket);
+                ALOGD("zw_size:%d",audioPlayer->audioQueue->getQueueSize());
+                audioPlayer->audioQueue->putAVPacket(avPacket);
+                //av_packet_free(&avPacket);
+                //av_free(avPacket);
             } else{
                 av_packet_free(&avPacket);
                 av_free(avPacket);
             }
         } else{
-            ALOGD("zw:解码结束");
+            //ALOGD("zw:解码结束");
             av_packet_free(&avPacket);
             av_free(avPacket);
-            break;
+
+            while (playStatus!=NULL && playStatus->getStatus()== true){
+                //因为队列里可能有缓存，所以不能直接退出，而是要等待
+                if(audioPlayer->audioQueue->getQueueSize()>0){
+                    continue;
+                } else{
+                    playStatus->setStatus(false);
+                    break;
+                }
+            }
+
         }
     }
-
+    /*
     //模拟出队
     while (this->audioPlayer->audioQueue->getQueueSize()>0){
         AVPacket *packet=av_packet_alloc();
-        this->audioPlayer->audioQueue->popAVPacket(packet);
+        this->audioPlayer->audioQueue->getAVPacket(packet);
         av_packet_free(&packet);
         av_free(packet);
         packet=NULL;
     }
-
+    */
     ALOGD("解码完成");
 }
-
 
 void FfmpegPlayer::start() {
     /*
@@ -110,8 +122,9 @@ void FfmpegPlayer::start() {
     pthread_create(&decodeThread,NULL,decodeFFmpeg,this);
 }
 
-FfmpegPlayer::FfmpegPlayer(PlayStatusUtil *pUtil) {
-    this->playStatus=playStatus;
+FfmpegPlayer::FfmpegPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil) {
+    this->playStatus=pUtil;
+    this->callbackUtil=callbackUtil;
 }
 
 

@@ -6,7 +6,7 @@
 #define AUDIOCOURSE_PLAYSTATUSUTIL_H
 class PlayStatusUtil{
 public:
-    bool status= false;
+    bool status= true;
 
     bool getStatus();
     void setStatus(bool status);

@@ -7,6 +7,7 @@
 
 #include "pthread.h"
 #include "AudioPlayer.h"
+#include "CallbackUtil.h"
 extern "C"{
     //#include "include/libavformat/avformat.h"
     //#include "libavformat/avformat.h"
@@ -14,13 +15,15 @@ extern "C"{
 };
 class FfmpegPlayer{
     public:
-    FfmpegPlayer(PlayStatusUtil *pUtil);
+    FfmpegPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil);
 
     const char *url=NULL;
         AudioPlayer *audioPlayer=NULL;
         pthread_t decodeThread;
         AVFormatContext *pFormaxCtx=NULL;
         PlayStatusUtil *playStatus=NULL;
+        CallbackUtil *callbackUtil=NULL;
+
         FfmpegPlayer();
         ~FfmpegPlayer();
         void init(const char *url);

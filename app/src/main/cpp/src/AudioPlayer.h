@@ -10,6 +10,7 @@
 
 extern "C"{
 #include "libavcodec/avcodec.h"
+#include "libswresample/swresample.h"
 };
 
 class AudioPlayer{
@@ -21,9 +22,18 @@ public:
     AVCodecParameters *codecPar=NULL;
     QueueUtil *audioQueue=NULL;
     PlayStatusUtil *playStatus=NULL;
+    pthread_t thread_play;
+    AVPacket *avPacket=NULL;
+    AVFrame *avFrame=NULL;
+    int ret=0;
+    uint8_t  *buffer=NULL;
+    int data_size=0;
+
 
     AudioPlayer();
     ~AudioPlayer();
+    void play();
+    void resampleAudio();
 
 
 
