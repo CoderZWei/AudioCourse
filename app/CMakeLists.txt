@@ -73,4 +73,5 @@ target_link_libraries( # Specifies the target library.
         postproc-54
         swresample-2
         swscale-4
+        OpenSLES
         ${log-lib})

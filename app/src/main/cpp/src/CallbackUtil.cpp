@@ -31,7 +31,14 @@ void CallbackUtil::onCallInited(int threadType) {
     switch (threadType){
         //主线程里调用回调
         case MAIN_THREAD:
+            if(jniEnv==NULL){
+                ALOGD("zw:jnienv is null");
+            } else{
+                ALOGD("zw:jnienv is not null");
+            }
+            ALOGD("zw:here0");
             this->jniEnv->CallVoidMethod(this->jobj,this->jmid_inited);
+            ALOGD("zw:here");
             break;
             //子线程里调用回调
         case CHILD_THREAD:

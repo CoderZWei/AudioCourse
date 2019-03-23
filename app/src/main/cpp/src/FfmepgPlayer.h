@@ -15,9 +15,9 @@ extern "C"{
 };
 class FfmpegPlayer{
     public:
-    FfmpegPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil);
+        FfmpegPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil);
 
-    const char *url=NULL;
+        const char *url=NULL;
         AudioPlayer *audioPlayer=NULL;
         pthread_t decodeThread;
         AVFormatContext *pFormaxCtx=NULL;

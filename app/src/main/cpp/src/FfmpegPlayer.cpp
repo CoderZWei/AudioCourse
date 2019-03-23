@@ -6,13 +6,24 @@
 #include "FfmepgPlayer.h"
 #include "log.h"
 
+FfmpegPlayer::FfmpegPlayer() {
+}
+
+FfmpegPlayer::~FfmpegPlayer() {
+}
+FfmpegPlayer::FfmpegPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil) {
+    this->playStatus=pUtil;
+    this->callbackUtil=callbackUtil;
+}
 
 void FfmpegPlayer::init(const char *url) {
-    audioPlayer=new AudioPlayer(this->playStatus);
+    //audioPlayer=new AudioPlayer(this->playStatus,44100);
     this->url=url;
     ALOGD("zw:url_%s",this->url);
     av_register_all();
+
     avformat_network_init();
+
     pFormaxCtx=avformat_alloc_context();
     if(avformat_open_input(&pFormaxCtx,this->url,NULL,NULL)!=0){
         ALOGE("zw:can't open url",this->url);
@@ -22,10 +33,14 @@ void FfmpegPlayer::init(const char *url) {
         ALOGE("zw:can't find stream info",this->url);
         return;
     }
+    ALOGD("zw:here");
     for(int i=0;i<pFormaxCtx->nb_streams;i++){
         if(pFormaxCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_AUDIO) { //codecpar用于记录编码后的信息
-                audioPlayer->streamIndex=i;
-                audioPlayer->codecPar=pFormaxCtx->streams[i]->codecpar;
+                if(audioPlayer==NULL){
+                    audioPlayer=new AudioPlayer(this->playStatus,this->pFormaxCtx->streams[i]->codecpar->sample_rate);
+                    audioPlayer->streamIndex=i;
+                    audioPlayer->codecPar=pFormaxCtx->streams[i]->codecpar;
+                }
             }
     }
     AVCodec *dec=avcodec_find_decoder(audioPlayer->codecPar->codec_id);
@@ -48,13 +63,7 @@ void FfmpegPlayer::init(const char *url) {
     callbackUtil->onCallInited(MAIN_THREAD);
 }
 
-FfmpegPlayer::FfmpegPlayer() {
 
-}
-
-FfmpegPlayer::~FfmpegPlayer() {
-
-}
 void *decodeFFmpeg(void *data){
     FfmpegPlayer *ffmpegPlayer=(FfmpegPlayer*)data;
     ffmpegPlayer->startDecode();
@@ -122,10 +131,6 @@ void FfmpegPlayer::start() {
     pthread_create(&decodeThread,NULL,decodeFFmpeg,this);
 }
 
-FfmpegPlayer::FfmpegPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil) {
-    this->playStatus=pUtil;
-    this->callbackUtil=callbackUtil;
-}
 
 
 

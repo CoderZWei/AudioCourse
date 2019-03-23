@@ -11,11 +11,13 @@
 extern "C"{
 #include "libavcodec/avcodec.h"
 #include "libswresample/swresample.h"
+#include "SLES/OpenSLES.h"
+#include "SLES/OpenSLES_Android.h"
 };
 
 class AudioPlayer{
 public:
-    AudioPlayer(PlayStatusUtil *pUtil);
+    AudioPlayer(PlayStatusUtil *pUtil,int sampleRate);
 
     int streamIndex=-1;
     AVCodecContext *avCodecContext=NULL;
@@ -27,13 +29,29 @@ public:
     AVFrame *avFrame=NULL;
     int ret=0;
     uint8_t  *buffer=NULL;
-    int data_size=0;
+    int dataSize=0;
+    int sampleRate=0;
 
+    //OpenSL ES相关变量
+     //引擎接口
+     SLObjectItf engineObject=NULL;
+     SLEngineItf engineEngine=NULL;
+     //混音器
+     SLObjectItf outputMixObject=NULL;
+     SLEnvironmentalReverbItf outputMixEnvironmentalReverb=NULL;
+     SLEnvironmentalReverbSettings reverbSettings=SL_I3DL2_ENVIRONMENT_PRESET_STONECORRIDOR;
+     //pcm
+     SLObjectItf  pcmPlayerObject=NULL;
+     SLPlayItf pcmPlayerPlay=NULL;
+     //缓冲器队列接口
+      SLAndroidSimpleBufferQueueItf pcmBufferQueue=NULL;
 
-    AudioPlayer();
-    ~AudioPlayer();
-    void play();
-    void resampleAudio();
+     AudioPlayer();
+     ~AudioPlayer();
+     void play();
+     int resampleAudio();
+     void initOpenSLES();
+     int getCurrentSampleRateForOpenSLES(int sampleRate);
 
 
 

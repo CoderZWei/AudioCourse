@@ -24,7 +24,7 @@ void QueueUtil::putAVPacket(AVPacket *packet) {
 
 int QueueUtil::getAVPacket(AVPacket *packet) {
     pthread_mutex_lock(&mutexPacket);//加锁
-    if(this->playStatusUtil!=NULL && this->playStatusUtil->getStatus()!= false){
+    while (this->playStatusUtil!=NULL && this->playStatusUtil->getStatus()!= false){
         if(this->queuePacket.size()>0){
             AVPacket *avPacket=this->queuePacket.front();
             //产生一个新的引用，第一个参数是dst,第二个参数是src,返回0表示成功
@@ -34,6 +34,7 @@ int QueueUtil::getAVPacket(AVPacket *packet) {
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket=NULL;
+            break;
         } else{
             pthread_cond_wait(&condPacket,&mutexPacket);
         }

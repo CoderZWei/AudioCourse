@@ -48,7 +48,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1start(JNIEnv *env, jobject instance) {
     if(ffmpegPlayer!=NULL){
-        ffmpegPlayer->start();
+        ffmpegPlayer->startDecode();
     }
 }
 
