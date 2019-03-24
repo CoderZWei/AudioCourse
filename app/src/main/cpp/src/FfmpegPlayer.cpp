@@ -37,7 +37,7 @@ void FfmpegPlayer::init(const char *url) {
     for(int i=0;i<pFormaxCtx->nb_streams;i++){
         if(pFormaxCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_AUDIO) { //codecpar用于记录编码后的信息
                 if(audioPlayer==NULL){
-                    audioPlayer=new AudioPlayer(this->playStatus,this->pFormaxCtx->streams[i]->codecpar->sample_rate);
+                    audioPlayer=new AudioPlayer(this->playStatus,this->callbackUtil,this->pFormaxCtx->streams[i]->codecpar->sample_rate);
                     audioPlayer->streamIndex=i;
                     audioPlayer->codecPar=pFormaxCtx->streams[i]->codecpar;
                 }
@@ -60,6 +60,7 @@ void FfmpegPlayer::init(const char *url) {
     if(avcodec_open2(audioPlayer->avCodecContext,dec,0)!=0){
         ALOGE("zw:can't open audio sreams");
     }
+    ALOGD("zw:HERE");
     callbackUtil->onCallInited(MAIN_THREAD);
 }
 
@@ -129,6 +130,18 @@ void FfmpegPlayer::start() {
 　　最后一个参数是运行函数的参数。
      */
     pthread_create(&decodeThread,NULL,decodeFFmpeg,this);
+}
+
+void FfmpegPlayer::pause() {
+    if(audioPlayer!=NULL){
+        audioPlayer->pause();
+    }
+}
+
+void FfmpegPlayer::resume() {
+    if(audioPlayer!=NULL){
+        audioPlayer->resume();
+    }
 }
 
 

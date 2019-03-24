@@ -17,10 +17,13 @@ public:
 
 
     jmethodID jmid_inited;
+    jmethodID jmid_load;
 
     CallbackUtil(_JavaVM *javaVM1,JNIEnv *env,jobject *obj);
     ~CallbackUtil();
     void onCallInited(int threadType);
+    void onCaLoad(int threadType, bool load);
+
 
 
 };

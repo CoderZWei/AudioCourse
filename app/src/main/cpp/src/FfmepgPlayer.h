@@ -29,6 +29,8 @@ class FfmpegPlayer{
         void init(const char *url);
         void start();
         void startDecode();
+        void pause();
+        void resume();
 
 
 

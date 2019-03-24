@@ -10,14 +10,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.zw.audiocourse.listener.OnInitListener;
+import com.example.zw.audiocourse.listener.OnLoadListener;
+import com.example.zw.audiocourse.listener.OnPauseResumeListener;
 import com.example.zw.audiocourse.util.PermissionUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public class MainActivity extends AppCompatActivity {
-    private Button mBtn;
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private Button mBtn_start,mBtn_pause,mBtn_resume;
     //FfmpegWrapper ffmpegWrapper;
     private MyPlayer mPlayer=null;
     private static final String audioPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"1.mp3";
@@ -26,9 +28,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         PermissionUtils.requestPermissionsIfNeed(this);
-        mBtn=(Button)findViewById(R.id.Btn_start);
+        initView();
         mPlayer=new MyPlayer();
-        Log.e("zwLog", audioPath );
         mPlayer.setOnInitListener(new OnInitListener() {
             @Override
             public void onInited() {
@@ -42,14 +43,50 @@ public class MainActivity extends AppCompatActivity {
                 mPlayer.start();
             }
         });
-
-        mBtn.setOnClickListener(new View.OnClickListener() {
+        mPlayer.setOnLoadListener(new OnLoadListener() {
             @Override
-            public void onClick(View v) {
-                mPlayer.init(audioPath);
+            public void onLoad(boolean load) {
+                if(load==true){
+                    Log.d("zw_log:","加载中");
+                }else {
+                    Log.d("zw_log:","播放中1");
+                }
+            }
+        });
+        mPlayer.setOnPauseResumeListener(new OnPauseResumeListener() {
+            @Override
+            public void onPause(boolean pause) {
+                if(pause==true){
+                    Log.d("zw_log:","暂停中");
+                }else {
+                    Log.d("zw_log:","播放中");
+                }
             }
         });
 
     }
 
+    private void initView() {
+        mBtn_start=(Button)findViewById(R.id.Btn_start);
+        mBtn_pause=(Button)findViewById(R.id.Btn_pause);
+        mBtn_resume=(Button)findViewById(R.id.Btn_resume);
+        mBtn_start.setOnClickListener(this);
+        mBtn_pause.setOnClickListener(this);
+        mBtn_resume.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.Btn_start:
+                mPlayer.init(audioPath);
+                break;
+            case R.id.Btn_pause:
+                mPlayer.pause();
+                break;
+            case R.id.Btn_resume:
+                mPlayer.resume();
+                break;
+        }
+    }
 }

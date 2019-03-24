@@ -14,8 +14,9 @@ AudioPlayer::~AudioPlayer() {
 
 }
 
-AudioPlayer::AudioPlayer(PlayStatusUtil *pUtil,int sampleRate) {
+AudioPlayer::AudioPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil,int sampleRate) {
     this->playStatus=pUtil;
+    this->callbackUtil=callbackUtil;
     this->sampleRate=sampleRate;
     this->audioQueue=new QueueUtil(playStatus);
     this->buffer=(uint8_t*)av_malloc(sampleRate*2*2);
@@ -37,7 +38,22 @@ int AudioPlayer::resampleAudio() {
         ALOGD("zw:outfile is NULL");
     }
     */
+    if(callbackUtil==NULL){
+        ALOGD("zw_callback isNULL");
+    }
     while (playStatus!=NULL && playStatus->getStatus()== true){
+        if(audioQueue->getQueueSize()==0){
+            if(playStatus->getLoadStatus()== false){
+                playStatus->setLoadStatus(true);
+               callbackUtil->onCaLoad(CHILD_THREAD,true);
+            }
+            continue;
+        }else{
+            if(playStatus->getLoadStatus()== true){
+                playStatus->setLoadStatus(false);
+               callbackUtil->onCaLoad(CHILD_THREAD, false);
+            }
+        }
         avPacket=av_packet_alloc();
         if(audioQueue->getAVPacket(avPacket)!=0){
             av_packet_free(&avPacket);
@@ -107,7 +123,7 @@ int AudioPlayer::resampleAudio() {
                 swr_free(&swr_ctx);
                 swr_ctx=NULL;
             }
-            break;
+            break;//如果读成功就直接退出
         }else{
             av_packet_free(&avPacket);
             av_free(avPacket);
@@ -241,6 +257,18 @@ int AudioPlayer::getCurrentSampleRateForOpenSLES(int sampleRate) {
             rate =  SL_SAMPLINGRATE_44_1;
     }
     return rate;
+}
+
+void AudioPlayer::pause() {
+    if(pcmPlayerPlay!=NULL){
+        (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay,SL_PLAYSTATE_PAUSED);
+    }
+}
+
+void AudioPlayer::resume() {
+    if(pcmPlayerPlay!=NULL){
+        (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay,SL_PLAYSTATE_PLAYING);
+    }
 }
 
 

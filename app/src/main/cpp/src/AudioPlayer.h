@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include "QueueUtil.h"
+#include "CallbackUtil.h"
 
 extern "C"{
 #include "libavcodec/avcodec.h"
@@ -17,7 +18,7 @@ extern "C"{
 
 class AudioPlayer{
 public:
-    AudioPlayer(PlayStatusUtil *pUtil,int sampleRate);
+    AudioPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil,int sampleRate);
 
     int streamIndex=-1;
     AVCodecContext *avCodecContext=NULL;
@@ -31,7 +32,7 @@ public:
     uint8_t  *buffer=NULL;
     int dataSize=0;
     int sampleRate=0;
-
+    CallbackUtil *callbackUtil=NULL;
     //OpenSL ES相关变量
      //引擎接口
      SLObjectItf engineObject=NULL;
@@ -52,6 +53,9 @@ public:
      int resampleAudio();
      void initOpenSLES();
      int getCurrentSampleRateForOpenSLES(int sampleRate);
+
+     void pause();
+     void resume();
 
 
 

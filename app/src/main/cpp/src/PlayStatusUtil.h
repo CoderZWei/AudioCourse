@@ -7,6 +7,11 @@
 class PlayStatusUtil{
 public:
     bool status= true;
+    bool loadStatus= true;
+
+    bool getLoadStatus();
+
+    void setLoadStatus(bool loadStatus);
 
     bool getStatus();
     void setStatus(bool status);

@@ -1,6 +1,8 @@
 package com.example.zw.audiocourse;
 
 import com.example.zw.audiocourse.listener.OnInitListener;
+import com.example.zw.audiocourse.listener.OnLoadListener;
+import com.example.zw.audiocourse.listener.OnPauseResumeListener;
 
 public class MyPlayer {
 
@@ -22,5 +24,24 @@ public class MyPlayer {
         }
         ffmpegWrapper.setOnInitListener(onInitListener);
     }
+    public void setOnLoadListener(OnLoadListener onLoadListener) {
+        if(ffmpegWrapper==null){
+            ffmpegWrapper=FfmpegWrapper.getWrapper();
+        }
+        ffmpegWrapper.setOnLoadListener(onLoadListener);
+    }
 
+    public void setOnPauseResumeListener(OnPauseResumeListener onPauseResumeListener) {
+        if(ffmpegWrapper==null){
+            ffmpegWrapper=FfmpegWrapper.getWrapper();
+        }
+        ffmpegWrapper.setOnPauseResumeListener(onPauseResumeListener);
+    }
+    public void pause() {
+        ffmpegWrapper.pause();
+    }
+
+    public void resume() {
+        ffmpegWrapper.resume();
+    }
 }

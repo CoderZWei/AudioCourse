@@ -17,29 +17,34 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
     jint result = -1;
     javaVM = vm;
     JNIEnv *env;
-    if(vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK)
+    if(vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK)
     {
         return result;
     }
-    return JNI_VERSION_1_4;
+    return JNI_VERSION_1_6;
 }
-
+pthread_t initThread;
+const char *audioPath;
+void *initFun(void *data){
+    ffmpegPlayer->init(audioPath);
+    pthread_exit(&initThread);
+}
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1init(JNIEnv *env, jobject instance,jstring path_) {
-    const char *audioPath=env->GetStringUTFChars(path_,0);
+     audioPath=env->GetStringUTFChars(path_,0);
     ALOGD("zw:audiopath_%s",audioPath);
-    if(callBack==NULL){
-        callBack=new CallbackUtil(javaVM,env,&instance);
-    }
-    if(ffmpegPlayer==NULL){
 
+    if(ffmpegPlayer==NULL){
+        if(callBack==NULL){
+            callBack=new CallbackUtil(javaVM,env,&instance);
+        }
         playStatus=new PlayStatusUtil();
         ffmpegPlayer=new FfmpegPlayer(playStatus,callBack);
     }
+    //pthread_create(&initThread,NULL,initFun,(void*)NULL);
     ffmpegPlayer->init(audioPath);
     env->ReleaseStringUTFChars(path_, audioPath);
-
 }
 
 
@@ -52,3 +57,22 @@ Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1start(JNIEnv *env, jobject in
     }
 }
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1pause(JNIEnv *env, jobject instance) {
+    if(ffmpegPlayer!=NULL){
+        ffmpegPlayer->pause();
+    }
+    // TODO
+
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1resume(JNIEnv *env, jobject instance) {
+    if(ffmpegPlayer!=NULL){
+        ffmpegPlayer->resume();
+    }
+    // TODO
+
+}

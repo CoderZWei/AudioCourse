@@ -17,3 +17,11 @@ bool PlayStatusUtil::getStatus() {
 void PlayStatusUtil::setStatus(bool status) {
     PlayStatusUtil::status = status;
 }
+
+bool PlayStatusUtil::getLoadStatus(){
+    return loadStatus;
+}
+
+void PlayStatusUtil::setLoadStatus(bool loadStatus) {
+    PlayStatusUtil::loadStatus = loadStatus;
+}
