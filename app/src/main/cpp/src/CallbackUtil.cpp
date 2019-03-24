@@ -19,9 +19,8 @@ CallbackUtil::CallbackUtil(_JavaVM *javaVM1,JNIEnv *env,jobject *obj) {
 
     this->jmid_inited = env->GetMethodID(jlz, "onCallInit", "()V");
     this->jmid_load=env->GetMethodID(jlz,"onCallLoad","(Z)V");
-
-
-    ALOGD("zw_jmid:%d",jmid_inited);
+    this->jmid_timeUpdate=env->GetMethodID(jlz,"onCallTimeUpdate","(II)V");
+    //ALOGD("zw_jmid:%d",jmid_inited);
 }
 
 CallbackUtil::~CallbackUtil() {
@@ -47,7 +46,7 @@ void CallbackUtil::onCallInited(int threadType) {
     }
 }
 
-void CallbackUtil::onCaLoad(int threadType, bool load) {
+void CallbackUtil::onCallLoad(int threadType, bool load) {
     if(threadType == MAIN_THREAD)
     {
         jniEnv->CallVoidMethod(jobj, jmid_load, load);
@@ -63,6 +62,25 @@ void CallbackUtil::onCaLoad(int threadType, bool load) {
         jniEnv->CallVoidMethod(jobj, jmid_load, load);
         javaVM->DetachCurrentThread();
     }
+}
+
+void CallbackUtil::onCallTimeUpdate(int threadType, int currentTime, int totalTime) {
+    if(threadType == MAIN_THREAD)
+    {
+        jniEnv->CallVoidMethod(jobj, jmid_timeUpdate, currentTime,totalTime);
+    }
+    else if(threadType == CHILD_THREAD)
+    {
+        JNIEnv *jniEnv;
+        if(javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+        {
+            ALOGD("call onCllLoad worng");
+            return;
+        }
+        jniEnv->CallVoidMethod(jobj, jmid_timeUpdate,currentTime,totalTime );
+        javaVM->DetachCurrentThread();
+    }
+
 }
 
 

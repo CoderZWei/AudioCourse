@@ -1,8 +1,11 @@
 package com.example.zw.audiocourse;
 
+import android.support.v4.app.NavUtils;
+
 import com.example.zw.audiocourse.listener.OnInitListener;
 import com.example.zw.audiocourse.listener.OnLoadListener;
 import com.example.zw.audiocourse.listener.OnPauseResumeListener;
+import com.example.zw.audiocourse.listener.OnTimeUpdateListener;
 
 public class MyPlayer {
 
@@ -36,6 +39,12 @@ public class MyPlayer {
             ffmpegWrapper=FfmpegWrapper.getWrapper();
         }
         ffmpegWrapper.setOnPauseResumeListener(onPauseResumeListener);
+    }
+    public void setOnTimeUpdateListener(OnTimeUpdateListener onTimeUpdateListener) {
+        if(ffmpegWrapper==null){
+            ffmpegWrapper=FfmpegWrapper.getWrapper();
+        }
+        ffmpegWrapper.setOnTimeUpdateListener(onTimeUpdateListener);
     }
     public void pause() {
         ffmpegWrapper.pause();

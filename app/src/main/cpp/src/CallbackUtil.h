@@ -18,12 +18,13 @@ public:
 
     jmethodID jmid_inited;
     jmethodID jmid_load;
+    jmethodID jmid_timeUpdate;
 
     CallbackUtil(_JavaVM *javaVM1,JNIEnv *env,jobject *obj);
     ~CallbackUtil();
     void onCallInited(int threadType);
-    void onCaLoad(int threadType, bool load);
-
+    void onCallLoad(int threadType, bool load);
+    void onCallTimeUpdate(int threadType,int currentTime,int totalTime);
 
 
 };

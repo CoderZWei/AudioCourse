@@ -1,6 +1,8 @@
 package com.example.zw.audiocourse;
 
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,7 +14,10 @@ import android.widget.Toast;
 import com.example.zw.audiocourse.listener.OnInitListener;
 import com.example.zw.audiocourse.listener.OnLoadListener;
 import com.example.zw.audiocourse.listener.OnPauseResumeListener;
+import com.example.zw.audiocourse.listener.OnTimeUpdateListener;
 import com.example.zw.audiocourse.util.PermissionUtils;
+import com.example.zw.audiocourse.util.TimeInfoBean;
+import com.example.zw.audiocourse.util.TimeUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,6 +25,7 @@ import java.io.FileNotFoundException;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button mBtn_start,mBtn_pause,mBtn_resume;
+    private TextView mTextView_time;
     //FfmpegWrapper ffmpegWrapper;
     private MyPlayer mPlayer=null;
     private static final String audioPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"1.mp3";
@@ -63,18 +69,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
-
+        mPlayer.setOnTimeUpdateListener(new OnTimeUpdateListener() {
+            @Override
+            public void onTimeUpdate(TimeInfoBean timeInfoBean) {
+                Message message=Message.obtain();
+                message.what=1;
+                message.obj=timeInfoBean;
+                handler.sendMessage(message);
+            }
+        });
     }
 
     private void initView() {
+        mTextView_time=(TextView)findViewById(R.id.TextView_time);
         mBtn_start=(Button)findViewById(R.id.Btn_start);
         mBtn_pause=(Button)findViewById(R.id.Btn_pause);
         mBtn_resume=(Button)findViewById(R.id.Btn_resume);
         mBtn_start.setOnClickListener(this);
         mBtn_pause.setOnClickListener(this);
         mBtn_resume.setOnClickListener(this);
-    }
 
+    }
+    Handler handler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if(msg.what==1){
+                TimeInfoBean timeInfoBean=(TimeInfoBean)msg.obj;
+                mTextView_time.setText(TimeUtil.secdsToDateFormat(timeInfoBean.getTotalTime(), timeInfoBean.getTotalTime())
+                        + "/" + TimeUtil.secdsToDateFormat(timeInfoBean.getCurrentTime(), timeInfoBean.getTotalTime()));
+            }
+        }
+    };
     @Override
     public void onClick(View v) {
         switch (v.getId()){

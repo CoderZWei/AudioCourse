@@ -40,6 +40,8 @@ void FfmpegPlayer::init(const char *url) {
                     audioPlayer=new AudioPlayer(this->playStatus,this->callbackUtil,this->pFormaxCtx->streams[i]->codecpar->sample_rate);
                     audioPlayer->streamIndex=i;
                     audioPlayer->codecPar=pFormaxCtx->streams[i]->codecpar;
+                    audioPlayer->duration=pFormaxCtx->duration/AV_TIME_BASE;
+                    audioPlayer->time_base=pFormaxCtx->streams[i]->time_base;
                 }
             }
     }

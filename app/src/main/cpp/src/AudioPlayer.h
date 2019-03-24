@@ -46,6 +46,12 @@ public:
      SLPlayItf pcmPlayerPlay=NULL;
      //缓冲器队列接口
       SLAndroidSimpleBufferQueueItf pcmBufferQueue=NULL;
+      //时间相关变量
+      int duration=0;
+      AVRational time_base;
+      double clock;//总的播放时长
+      double now_time;//当前播放时长
+      double last_time;//上一次调用时间
 
      AudioPlayer();
      ~AudioPlayer();

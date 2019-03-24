@@ -45,13 +45,13 @@ int AudioPlayer::resampleAudio() {
         if(audioQueue->getQueueSize()==0){
             if(playStatus->getLoadStatus()== false){
                 playStatus->setLoadStatus(true);
-               callbackUtil->onCaLoad(CHILD_THREAD,true);
+               callbackUtil->onCallLoad(CHILD_THREAD,true);
             }
             continue;
         }else{
             if(playStatus->getLoadStatus()== true){
                 playStatus->setLoadStatus(false);
-               callbackUtil->onCaLoad(CHILD_THREAD, false);
+               callbackUtil->onCallLoad(CHILD_THREAD, false);
             }
         }
         avPacket=av_packet_alloc();
@@ -112,6 +112,13 @@ int AudioPlayer::resampleAudio() {
             int out_channels=av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
             dataSize=nb*out_channels*av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
             ALOGD("zw_data_size:%d",dataSize);
+
+            now_time=avFrame->pts*av_q2d(time_base);
+            if(now_time<clock){
+                now_time=clock;
+            }
+            clock=now_time;
+
            // fwrite(buffer,1,dataSize,outFile);
             av_packet_free(&avPacket);
             av_free(avPacket);
@@ -146,6 +153,13 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context)
         int buffersize = audioPlayer->resampleAudio();
         if(buffersize > 0)
         {
+            audioPlayer->clock+=buffersize/ ((double)(audioPlayer->sampleRate * 2 * 2));
+            if(audioPlayer->clock - audioPlayer->last_time >= 0.1)
+            {
+                audioPlayer->last_time = audioPlayer->clock;
+                //回调应用层
+                audioPlayer->callbackUtil->onCallTimeUpdate(CHILD_THREAD,audioPlayer->clock, audioPlayer->duration);
+            }
             //往里填充数据
             (* audioPlayer-> pcmBufferQueue)->Enqueue( audioPlayer->pcmBufferQueue, (char *) audioPlayer-> buffer, buffersize);
         }
