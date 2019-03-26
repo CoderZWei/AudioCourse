@@ -8,6 +8,11 @@ class PlayStatusUtil{
 public:
     bool status= true;
     bool loadStatus= true;
+    bool seekStatus= false;
+
+    bool getSeekStatus() const;
+
+    void setSeekStatus(bool seekStatus);
 
     bool getLoadStatus();
 

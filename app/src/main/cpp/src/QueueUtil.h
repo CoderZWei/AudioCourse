@@ -24,6 +24,7 @@ public:
     void putAVPacket(AVPacket *packet);
     int getAVPacket(AVPacket *packet);
     int getQueueSize();
+    void clearAVPacket();
     QueueUtil(PlayStatusUtil *playStatusUtil);
     ~QueueUtil();
 

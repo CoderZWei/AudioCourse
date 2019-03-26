@@ -57,4 +57,8 @@ public class MyPlayer {
     public void stop() {
         ffmpegWrapper.stop();
     }
+
+    public void seek(int time_sec) {
+        ffmpegWrapper.seek(time_sec);
+    }
 }

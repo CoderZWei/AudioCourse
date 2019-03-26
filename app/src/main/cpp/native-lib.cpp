@@ -91,3 +91,14 @@ Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1stop(JNIEnv *env, jobject ins
         playStatus=NULL;
     }
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1seek(JNIEnv *env, jobject instance,
+                                                        jint time_sec) {
+
+    if(ffmpegPlayer!=NULL){
+        ffmpegPlayer->seek(time_sec);
+    }
+
+}

@@ -25,6 +25,8 @@ class FfmpegPlayer{
         PlayStatusUtil *playStatus=NULL;
         CallbackUtil *callbackUtil=NULL;
         pthread_mutex_t init_mutex;
+        pthread_mutex_t seek_mutex;
+        int duration=0;
         bool exit= false;
 
         FfmpegPlayer();
@@ -35,6 +37,7 @@ class FfmpegPlayer{
         void pause();
         void resume();
         void release();
+        void seek(int64_t time_sec);
 
 
 

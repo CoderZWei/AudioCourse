@@ -50,3 +50,16 @@ int QueueUtil::getQueueSize() {
     pthread_mutex_unlock(&mutexPacket);
     return size;
 }
+
+void QueueUtil::clearAVPacket() {
+   // pthread_cond_signal(&condPacket);
+    pthread_mutex_lock(&mutexPacket);
+    while (!queuePacket.empty()){
+        AVPacket *packet=queuePacket.front();
+        queuePacket.pop();
+        av_packet_free(&packet);
+        av_free(packet);
+        packet=NULL;
+    }
+    pthread_mutex_unlock(&mutexPacket);
+}

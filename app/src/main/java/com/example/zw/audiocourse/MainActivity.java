@@ -24,7 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private Button mBtn_start,mBtn_pause,mBtn_resume,mBtn_stop;
+    private Button mBtn_start,mBtn_pause,mBtn_resume,mBtn_stop,mBtn_seek;
     private TextView mTextView_time;
     //FfmpegWrapper ffmpegWrapper;
     private MyPlayer mPlayer=null;
@@ -85,10 +85,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtn_start=(Button)findViewById(R.id.Btn_start);
         mBtn_pause=(Button)findViewById(R.id.Btn_pause);
         mBtn_resume=(Button)findViewById(R.id.Btn_resume);
+        mBtn_seek=(Button)findViewById(R.id.Btn_seek);
         mBtn_stop=(Button)findViewById(R.id.Btn_stop);
         mBtn_start.setOnClickListener(this);
         mBtn_pause.setOnClickListener(this);
         mBtn_resume.setOnClickListener(this);
+        mBtn_seek.setOnClickListener(this);
         mBtn_stop.setOnClickListener(this);
     }
     Handler handler=new Handler(){
@@ -113,6 +115,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.Btn_resume:
                 mPlayer.resume();
+                break;
+            case R.id.Btn_seek:
+                int seek_time=215;
+                mPlayer.seek(seek_time);
                 break;
             case R.id.Btn_stop:
                 mPlayer.stop();

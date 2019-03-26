@@ -33,6 +33,7 @@ void AudioPlayer::play() {
 }
 //FILE *outFile=fopen("/storage/emulated/0/myMusic.pcm","w");
 int AudioPlayer::resampleAudio() {
+    dataSize=0;//要是不赋值0的话音频播放结束也会继续更新时间
     /*
     if(outFile==NULL){
         ALOGD("zw:outfile is NULL");
@@ -42,6 +43,9 @@ int AudioPlayer::resampleAudio() {
         ALOGD("zw_callback isNULL");
     }
     while (playStatus!=NULL && playStatus->getStatus()== true){
+        if(playStatus->getSeekStatus()== true){
+            continue;
+        }
         if(audioQueue->getQueueSize()==0){
             if(playStatus->getLoadStatus()== false){
                 playStatus->setLoadStatus(true);
@@ -153,6 +157,7 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context)
         int buffersize = audioPlayer->resampleAudio();
         if(buffersize > 0)
         {
+            ALOGD("zw:buffersize_%d",buffersize);
             audioPlayer->clock+=buffersize/ ((double)(audioPlayer->sampleRate * 2 * 2));
             if(audioPlayer->clock - audioPlayer->last_time >= 0.1)
             {

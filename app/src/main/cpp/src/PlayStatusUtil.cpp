@@ -25,3 +25,11 @@ bool PlayStatusUtil::getLoadStatus(){
 void PlayStatusUtil::setLoadStatus(bool loadStatus) {
     PlayStatusUtil::loadStatus = loadStatus;
 }
+
+bool PlayStatusUtil::getSeekStatus() const {
+    return seekStatus;
+}
+
+void PlayStatusUtil::setSeekStatus(bool seekStatus) {
+    PlayStatusUtil::seekStatus = seekStatus;
+}

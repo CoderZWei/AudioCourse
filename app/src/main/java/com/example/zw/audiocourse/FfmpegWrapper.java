@@ -111,6 +111,7 @@ public class FfmpegWrapper {
     public native void cpp_pause();
     public native void cpp_resume();
     public native void cpp_stop();
+    public native void cpp_seek(int time_sec);
 
 
     public void stop() {
@@ -120,5 +121,9 @@ public class FfmpegWrapper {
                 cpp_stop();
             }
         }).start();
+    }
+
+    public void seek(int time_sec) {
+        cpp_seek(time_sec);
     }
 }
