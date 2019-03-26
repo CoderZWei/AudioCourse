@@ -62,6 +62,7 @@ public:
 
      void pause();
      void resume();
+     void release();
 
 
 

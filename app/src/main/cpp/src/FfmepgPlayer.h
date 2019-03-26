@@ -12,6 +12,7 @@ extern "C"{
     //#include "include/libavformat/avformat.h"
     //#include "libavformat/avformat.h"
 #include "libavformat/avformat.h"
+#include <libavutil/time.h>
 };
 class FfmpegPlayer{
     public:
@@ -20,9 +21,11 @@ class FfmpegPlayer{
         const char *url=NULL;
         AudioPlayer *audioPlayer=NULL;
         pthread_t decodeThread;
-        AVFormatContext *pFormaxCtx=NULL;
+        AVFormatContext *pFormatCtx=NULL;
         PlayStatusUtil *playStatus=NULL;
         CallbackUtil *callbackUtil=NULL;
+        pthread_mutex_t init_mutex;
+        bool exit= false;
 
         FfmpegPlayer();
         ~FfmpegPlayer();
@@ -31,6 +34,7 @@ class FfmpegPlayer{
         void startDecode();
         void pause();
         void resume();
+        void release();
 
 
 

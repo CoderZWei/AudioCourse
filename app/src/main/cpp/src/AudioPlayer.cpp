@@ -113,7 +113,7 @@ int AudioPlayer::resampleAudio() {
             dataSize=nb*out_channels*av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
             ALOGD("zw_data_size:%d",dataSize);
 
-            now_time=avFrame->pts*av_q2d(time_base);
+            now_time=avFrame->pts*av_q2d(time_base);//帧数乘以每一帧的时间
             if(now_time<clock){
                 now_time=clock;
             }
@@ -283,6 +283,47 @@ void AudioPlayer::resume() {
     if(pcmPlayerPlay!=NULL){
         (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay,SL_PLAYSTATE_PLAYING);
     }
+}
+
+void AudioPlayer::release() {
+    if(playStatus!=NULL){
+        playStatus=NULL;
+    }
+    if(callbackUtil!=NULL){
+        callbackUtil=NULL;
+    }
+    if(audioQueue!=NULL){
+            delete(audioQueue);
+            audioQueue=NULL;
+    }
+    if(pcmPlayerObject!=NULL){
+        (*pcmPlayerObject)->Destroy(pcmPlayerObject);
+        pcmPlayerObject=NULL;
+        pcmPlayerPlay=NULL;
+        pcmBufferQueue=NULL;
+    }
+    if(outputMixObject!=NULL){
+        (*outputMixObject)->Destroy(outputMixObject);
+        outputMixObject=NULL;
+        outputMixEnvironmentalReverb=NULL;
+    }
+    if(engineObject!=NULL){
+        (*engineObject)->Destroy(engineObject);
+        engineObject=NULL;
+        engineEngine=NULL;
+    }
+    if(buffer!=NULL){
+        buffer=NULL;
+    }
+    if(avCodecContext!=NULL){
+        avcodec_close(avCodecContext);
+        avcodec_free_context(&avCodecContext);
+        avCodecContext=NULL;
+    }
+    if(pcmPlayerPlay!=NULL){
+        (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay,SL_PLAYSTATE_STOPPED);
+    }
+
 }
 
 

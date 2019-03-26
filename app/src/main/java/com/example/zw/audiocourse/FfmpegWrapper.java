@@ -110,6 +110,15 @@ public class FfmpegWrapper {
     public native void cpp_start();
     public native void cpp_pause();
     public native void cpp_resume();
+    public native void cpp_stop();
 
 
+    public void stop() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                cpp_stop();
+            }
+        }).start();
+    }
 }

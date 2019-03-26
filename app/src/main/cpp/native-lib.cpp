@@ -63,8 +63,6 @@ Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1pause(JNIEnv *env, jobject in
     if(ffmpegPlayer!=NULL){
         ffmpegPlayer->pause();
     }
-    // TODO
-
 }
 
 extern "C"
@@ -73,6 +71,23 @@ Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1resume(JNIEnv *env, jobject i
     if(ffmpegPlayer!=NULL){
         ffmpegPlayer->resume();
     }
-    // TODO
+}
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1stop(JNIEnv *env, jobject instance) {
+    if(ffmpegPlayer!=NULL){
+        ffmpegPlayer->release();
+        delete(ffmpegPlayer);
+        ffmpegPlayer=NULL;
+    }
+    //指针的new对象都需要delete
+    if(callBack!=NULL){
+        delete(callBack);
+        callBack=NULL;
+    }
+    if(playStatus!=NULL){
+        delete(playStatus);
+        playStatus=NULL;
+    }
 }

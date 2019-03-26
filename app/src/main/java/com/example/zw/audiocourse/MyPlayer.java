@@ -53,4 +53,8 @@ public class MyPlayer {
     public void resume() {
         ffmpegWrapper.resume();
     }
+
+    public void stop() {
+        ffmpegWrapper.stop();
+    }
 }
