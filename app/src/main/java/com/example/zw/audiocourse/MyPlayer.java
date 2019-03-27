@@ -11,10 +11,15 @@ public class MyPlayer {
 
     private FfmpegWrapper ffmpegWrapper=null;
 
-    public void init(String audioPath) {
+    public void init(final String audioPath) {
         ffmpegWrapper=FfmpegWrapper.getWrapper();
-        ffmpegWrapper.init(audioPath);
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ffmpegWrapper.init(audioPath);
+            }
+        }).start();
     }
 
     public void start() {
@@ -57,8 +62,12 @@ public class MyPlayer {
     public void stop() {
         ffmpegWrapper.stop();
     }
-
+    public void switchAudio(String audioUrl) {
+        ffmpegWrapper.switchAudio(audioUrl);
+    }
     public void seek(int time_sec) {
         ffmpegWrapper.seek(time_sec);
     }
+
+
 }

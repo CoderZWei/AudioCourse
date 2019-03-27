@@ -20,6 +20,8 @@ public class FfmpegWrapper {
     private OnLoadListener onLoadListener;
     private OnPauseResumeListener onPauseResumeListener;
     private TimeInfoBean timeInfoBean=null;
+    private static String audioSource;//音频数据源
+    private static boolean playSwitch=false;
 
 
     private OnTimeUpdateListener onTimeUpdateListener;
@@ -35,7 +37,8 @@ public class FfmpegWrapper {
         Thread thread=new Thread(new Runnable() {
             @Override
             public void run() {
-                cpp_init(path);
+                audioSource=path;
+                cpp_init(audioSource);
             }
         });
         thread.start();
@@ -62,7 +65,12 @@ public class FfmpegWrapper {
             onTimeUpdateListener.onTimeUpdate(timeInfoBean);
         }
     }
-
+    public void onCallSwitch(){
+        if(playSwitch){
+            playSwitch=false;
+            init(audioSource);
+        }
+    }
     public void setOnInitListener(OnInitListener onInitListener) {
         this.onInitListener = onInitListener;
     }
@@ -114,6 +122,7 @@ public class FfmpegWrapper {
     public native void cpp_seek(int time_sec);
 
 
+
     public void stop() {
         new Thread(new Runnable() {
             @Override
@@ -125,5 +134,11 @@ public class FfmpegWrapper {
 
     public void seek(int time_sec) {
         cpp_seek(time_sec);
+    }
+
+    public void switchAudio(String audioUrl) {
+        audioSource=audioUrl;
+        playSwitch=true;
+        stop();
     }
 }

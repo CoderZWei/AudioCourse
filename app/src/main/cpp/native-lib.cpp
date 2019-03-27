@@ -10,7 +10,7 @@ PlayStatusUtil *playStatus=NULL;
 CallbackUtil *callBack=NULL;
 
 _JavaVM *javaVM = NULL;
-
+bool nexit= true;
 extern "C"
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
 {
@@ -76,6 +76,9 @@ Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1resume(JNIEnv *env, jobject i
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1stop(JNIEnv *env, jobject instance) {
+    jclass clz=env->GetObjectClass(instance);
+    jmethodID jmid_next=env->GetMethodID(clz,"onCallSwitch","()V");
+
     if(ffmpegPlayer!=NULL){
         ffmpegPlayer->release();
         delete(ffmpegPlayer);
@@ -90,6 +93,7 @@ Java_com_example_zw_audiocourse_FfmpegWrapper_cpp_1stop(JNIEnv *env, jobject ins
         delete(playStatus);
         playStatus=NULL;
     }
+    env->CallVoidMethod(instance,jmid_next);
 }
 
 extern "C"

@@ -34,12 +34,20 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/Btn_resume"
         />
+
+   <Button
+       android:id="@+id/Btn_switch"
+       android:text="切换播放"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       app:layout_constraintTop_toBottomOf="@+id/Btn_resume"
+       />
    <Button
        android:id="@+id/Btn_stop"
        android:text="停止播放"
        android:layout_width="match_parent"
        android:layout_height="wrap_content"
-       app:layout_constraintTop_toBottomOf="@+id/Btn_seek"
+       app:layout_constraintTop_toBottomOf="@+id/Btn_switch"
        />
    <TextView
        android:id="@+id/TextView_time"

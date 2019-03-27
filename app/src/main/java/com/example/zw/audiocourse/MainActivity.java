@@ -24,7 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private Button mBtn_start,mBtn_pause,mBtn_resume,mBtn_stop,mBtn_seek;
+    private Button mBtn_start,mBtn_pause,mBtn_resume,mBtn_stop,mBtn_seek,mBtn_switch;
     private TextView mTextView_time;
     //FfmpegWrapper ffmpegWrapper;
     private MyPlayer mPlayer=null;
@@ -86,11 +86,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtn_pause=(Button)findViewById(R.id.Btn_pause);
         mBtn_resume=(Button)findViewById(R.id.Btn_resume);
         mBtn_seek=(Button)findViewById(R.id.Btn_seek);
+        mBtn_switch=(Button)findViewById(R.id.Btn_switch);
         mBtn_stop=(Button)findViewById(R.id.Btn_stop);
         mBtn_start.setOnClickListener(this);
         mBtn_pause.setOnClickListener(this);
         mBtn_resume.setOnClickListener(this);
         mBtn_seek.setOnClickListener(this);
+        mBtn_switch.setOnClickListener(this);
         mBtn_stop.setOnClickListener(this);
     }
     Handler handler=new Handler(){
@@ -119,6 +121,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.Btn_seek:
                 int seek_time=215;
                 mPlayer.seek(seek_time);
+                break;
+            case R.id.Btn_switch:
+                mPlayer.switchAudio("http://ngcdn004.cnr.cn/live/dszs/index.m3u8");
                 break;
             case R.id.Btn_stop:
                 mPlayer.stop();
