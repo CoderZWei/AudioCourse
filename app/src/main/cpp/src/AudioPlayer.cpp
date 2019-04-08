@@ -3,6 +3,7 @@
 //
 
 #include <pthread.h>
+
 #include "AudioPlayer.h"
 #include "log.h"
 
@@ -43,14 +44,16 @@ int AudioPlayer::resampleAudio() {
         ALOGD("zw_callback isNULL");
     }
     while (playStatus!=NULL && playStatus->getStatus()== true){
-        if(playStatus->getSeekStatus()== true){
+        if(playStatus->getSeekStatus()== true){//seek状态
+            av_usleep(1000*100);
             continue;
         }
-        if(audioQueue->getQueueSize()==0){
+        if(audioQueue->getQueueSize()==0){//加载中
             if(playStatus->getLoadStatus()== false){
                 playStatus->setLoadStatus(true);
                callbackUtil->onCallLoad(CHILD_THREAD,true);
             }
+            av_usleep(1000*100);
             continue;
         }else{
             if(playStatus->getLoadStatus()== true){
@@ -59,7 +62,7 @@ int AudioPlayer::resampleAudio() {
             }
         }
         avPacket=av_packet_alloc();
-        if(audioQueue->getAVPacket(avPacket)!=0){
+        if(audioQueue->getAVPacket(avPacket)!=0){//获取失败
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket=NULL;
@@ -115,7 +118,7 @@ int AudioPlayer::resampleAudio() {
                     );
             int out_channels=av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
             dataSize=nb*out_channels*av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
-            ALOGD("zw_data_size:%d",dataSize);
+           // ALOGD("zw_data_size:%d",dataSize);
 
             now_time=avFrame->pts*av_q2d(time_base);//帧数乘以每一帧的时间
             if(now_time<clock){
@@ -157,7 +160,7 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context)
         int buffersize = audioPlayer->resampleAudio();
         if(buffersize > 0)
         {
-            ALOGD("zw:buffersize_%d",buffersize);
+           // ALOGD("zw:buffersize_%d",buffersize);
             audioPlayer->clock+=buffersize/ ((double)(audioPlayer->sampleRate * 2 * 2));
             if(audioPlayer->clock - audioPlayer->last_time >= 0.1)
             {

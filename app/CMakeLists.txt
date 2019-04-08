@@ -9,6 +9,9 @@ add_library( # Sets the name of the library.
         src/main/cpp/src/CallbackUtil.cpp
         src/main/cpp/src/QueueUtil.cpp
         src/main/cpp/src/PlayStatusUtil.cpp
+
+        src/main/cpp/src/VideoPlayer.cpp
+
         src/main/cpp/native-lib.cpp)
 
 

@@ -8,6 +8,7 @@
 #include "pthread.h"
 #include "AudioPlayer.h"
 #include "CallbackUtil.h"
+#include "VideoPlayer.h"
 extern "C"{
     //#include "include/libavformat/avformat.h"
     //#include "libavformat/avformat.h"
@@ -17,7 +18,7 @@ extern "C"{
 class FfmpegPlayer{
     public:
         FfmpegPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil);
-
+        //音频相关
         const char *url=NULL;
         AudioPlayer *audioPlayer=NULL;
         pthread_t decodeThread;
@@ -38,7 +39,10 @@ class FfmpegPlayer{
         void resume();
         void release();
         void seek(int64_t time_sec);
-
+        //要用二级指针，因为avCodecContext是在局部函数里新建的
+        int getCodecContext(AVCodecParameters *codecpar,AVCodecContext **avCodecContext);
+        //视频相关
+        VideoPlayer *videoPlayer=NULL;
 
 
 

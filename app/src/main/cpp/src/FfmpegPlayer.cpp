@@ -56,34 +56,21 @@ void FfmpegPlayer::init(const char *url) {
                     duration=audioPlayer->duration;
                 }
             }
+        if(pFormatCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO){
+            if(videoPlayer==NULL){
+                videoPlayer=new VideoPlayer(this->playStatus,this->callbackUtil);
+                videoPlayer->streamIndex=i;
+                videoPlayer->codecPar=pFormatCtx->streams[i]->codecpar;
+                videoPlayer->time_base=pFormatCtx->streams[i]->time_base;
+            }
+        }
     }
-    AVCodec *dec=avcodec_find_decoder(audioPlayer->codecPar->codec_id);
-    if(!dec){
-        ALOGE("zw:can't find decoder");
-        exit= true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
+    if(audioPlayer!=NULL){
+        getCodecContext(audioPlayer->codecPar,&audioPlayer->avCodecContext);
     }
-    audioPlayer->avCodecContext=avcodec_alloc_context3(dec);
-    if(!audioPlayer->avCodecContext){
-        ALOGE("zw:can't alloc new decodectx");
-        exit= true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
+    if(videoPlayer!=NULL){
+        getCodecContext(videoPlayer->codecPar,&videoPlayer->avCodecContext);
     }
-    if(avcodec_parameters_to_context(audioPlayer->avCodecContext,audioPlayer->codecPar)){
-        ALOGE("zw:can't fill decodecctx");
-        exit= true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
-    }
-    if(avcodec_open2(audioPlayer->avCodecContext,dec,0)!=0){
-        ALOGE("zw:can't open audio sreams");
-        exit= true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
-    }
-    ALOGD("zw:HERE");
     if(callbackUtil!=NULL && playStatus->getStatus()== true){
         callbackUtil->onCallInited(MAIN_THREAD);
     } else{
@@ -104,25 +91,38 @@ void FfmpegPlayer::startDecode() {
         ALOGE("zw:audioPlayer is null");
         return;
     }
+    if(videoPlayer==NULL){
+        ALOGE("zw:vidioPlayer is null");
+        return;
+    }
     audioPlayer->play();
-    int count=0;
+    videoPlayer->play();
+    int audioCount=0,videoCount=0;
     while (playStatus!=NULL && playStatus->getStatus()== true ){
         if(playStatus->getSeekStatus()== true){//当前是seek状态时，停止解码
+            av_usleep(1000 * 100);
             continue;
         }
         if(audioPlayer->audioQueue->getQueueSize()>40){//防止队列中存储太多packet
+            av_usleep(1000 * 100);
             continue;
         }
         AVPacket *avPacket=av_packet_alloc();
         if(av_read_frame(pFormatCtx,avPacket)==0){
             if(avPacket->stream_index==audioPlayer->streamIndex){
-                count++;
-                ALOGD("zw:解码第%d帧",count);
-                ALOGD("zw_size:%d",audioPlayer->audioQueue->getQueueSize());
+                audioCount++;
+                //ALOGD("zw:解码音频第%d帧",audioCount);
+                //ALOGD("zw_音频size:%d",audioPlayer->audioQueue->getQueueSize());
                 audioPlayer->audioQueue->putAVPacket(avPacket);
                 //av_packet_free(&avPacket);
                 //av_free(avPacket);
-            } else{
+            } else if(avPacket->stream_index==videoPlayer->streamIndex){
+                videoCount++;
+                videoPlayer->videoQueue->putAVPacket(avPacket);
+                ALOGD("zw_videoSize0:%d",videoPlayer->videoQueue->getQueueSize());
+                ALOGD("zw:解码视频第%d帧",videoCount);
+            }
+            else{
                 av_packet_free(&avPacket);
                 av_free(avPacket);
             }
@@ -134,6 +134,7 @@ void FfmpegPlayer::startDecode() {
             while (playStatus!=NULL && playStatus->getStatus()== true){
                 //因为队列里可能有缓存，所以不能直接退出，而是要等待
                 if(audioPlayer->audioQueue->getQueueSize()>0){
+                    av_usleep(1000 * 100);
                     continue;
                 } else{
                     playStatus->setStatus(false);
@@ -200,6 +201,11 @@ void FfmpegPlayer::release() {
         delete(audioPlayer);
         audioPlayer=NULL;
     }
+    if(videoPlayer!=NULL){
+        videoPlayer->release();
+        delete(videoPlayer);
+        videoPlayer=NULL;
+    }
     if(pFormatCtx!=NULL){
         avformat_close_input(&pFormatCtx);
         avformat_free_context(pFormatCtx);
@@ -232,6 +238,38 @@ void FfmpegPlayer::seek(int64_t time_sec) {
         }
     }
 
+}
+
+int FfmpegPlayer::getCodecContext(AVCodecParameters *codecpar, AVCodecContext **avCodecContext) {
+    AVCodec *dec=avcodec_find_decoder(audioPlayer->codecPar->codec_id);
+    if(!dec){
+        ALOGE("zw:can't find decoder");
+        exit= true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    *avCodecContext=avcodec_alloc_context3(dec);
+   /* if(!audioPlayer->avCodecContext){
+        ALOGE("zw:can't alloc new decodectx");
+        exit= true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }*/
+    if(avcodec_parameters_to_context(*avCodecContext,audioPlayer->codecPar)<0){
+        ALOGE("zw:can't fill decodecctx");
+        exit= true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    if(avcodec_open2(*avCodecContext,dec,0)!=0){
+        ALOGE("zw:can't open audio sreams");
+        exit= true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    ALOGD("zw:HERE");
+
+    return 0;
 }
 
 

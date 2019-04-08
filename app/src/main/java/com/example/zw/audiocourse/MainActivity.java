@@ -28,7 +28,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTextView_time;
     //FfmpegWrapper ffmpegWrapper;
     private MyPlayer mPlayer=null;
-    private static final String audioPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"1.mp3";
+    //private static final String audioPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"1.mp3";
+    private static final String videoPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"demo.mov";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.Btn_start:
-                mPlayer.init(audioPath);
+                mPlayer.init(videoPath);
                 break;
             case R.id.Btn_pause:
                 mPlayer.pause();
