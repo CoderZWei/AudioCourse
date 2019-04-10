@@ -6,6 +6,7 @@ import com.example.zw.audiocourse.listener.OnInitListener;
 import com.example.zw.audiocourse.listener.OnLoadListener;
 import com.example.zw.audiocourse.listener.OnPauseResumeListener;
 import com.example.zw.audiocourse.listener.OnTimeUpdateListener;
+import com.example.zw.audiocourse.opengl.MyGLSurfaceView;
 
 public class MyPlayer {
 
@@ -50,6 +51,12 @@ public class MyPlayer {
             ffmpegWrapper=FfmpegWrapper.getWrapper();
         }
         ffmpegWrapper.setOnTimeUpdateListener(onTimeUpdateListener);
+    }
+    public void setGLSurfaceView(MyGLSurfaceView mGLSurfaceView) {
+        if(ffmpegWrapper==null){
+            ffmpegWrapper=FfmpegWrapper.getWrapper();
+        }
+        ffmpegWrapper.setGLSurfaceView(mGLSurfaceView);
     }
     public void pause() {
         ffmpegWrapper.pause();

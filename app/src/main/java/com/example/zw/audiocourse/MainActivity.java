@@ -15,6 +15,7 @@ import com.example.zw.audiocourse.listener.OnInitListener;
 import com.example.zw.audiocourse.listener.OnLoadListener;
 import com.example.zw.audiocourse.listener.OnPauseResumeListener;
 import com.example.zw.audiocourse.listener.OnTimeUpdateListener;
+import com.example.zw.audiocourse.opengl.MyGLSurfaceView;
 import com.example.zw.audiocourse.util.PermissionUtils;
 import com.example.zw.audiocourse.util.TimeInfoBean;
 import com.example.zw.audiocourse.util.TimeUtil;
@@ -26,17 +27,18 @@ import java.io.FileNotFoundException;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button mBtn_start,mBtn_pause,mBtn_resume,mBtn_stop,mBtn_seek,mBtn_switch;
     private TextView mTextView_time;
+    private MyGLSurfaceView mGLSurfaceView;
     //FfmpegWrapper ffmpegWrapper;
     private MyPlayer mPlayer=null;
     //private static final String audioPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"1.mp3";
-    private static final String videoPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"demo.mov";
+    private static final String videoPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"input.mp4";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         PermissionUtils.requestPermissionsIfNeed(this);
-        initView();
         mPlayer=new MyPlayer();
+        initView();
         mPlayer.setOnInitListener(new OnInitListener() {
             @Override
             public void onInited() {
@@ -54,9 +56,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onLoad(boolean load) {
                 if(load==true){
-                    Log.d("zw_log:","加载中");
+                    //Log.d("zw_log:","加载中");
                 }else {
-                    Log.d("zw_log:","播放中1");
+                    //Log.d("zw_log:","播放中1");
                 }
             }
         });
@@ -95,6 +97,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtn_seek.setOnClickListener(this);
         mBtn_switch.setOnClickListener(this);
         mBtn_stop.setOnClickListener(this);
+        mGLSurfaceView=(MyGLSurfaceView)findViewById(R.id.mGLSurfaceView);
+        if(mPlayer!=null){
+            mPlayer.setGLSurfaceView(mGLSurfaceView);
+        }
     }
     Handler handler=new Handler(){
         @Override

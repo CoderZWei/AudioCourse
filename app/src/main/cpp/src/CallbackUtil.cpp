@@ -20,6 +20,7 @@ CallbackUtil::CallbackUtil(_JavaVM *javaVM1,JNIEnv *env,jobject *obj) {
     this->jmid_inited = env->GetMethodID(jlz, "onCallInit", "()V");
     this->jmid_load=env->GetMethodID(jlz,"onCallLoad","(Z)V");
     this->jmid_timeUpdate=env->GetMethodID(jlz,"onCallTimeUpdate","(II)V");
+    this->jmid_renderYUV=env->GetMethodID(jlz,"onCallRenderYUV","(II[B[B[B)V");
     //ALOGD("zw_jmid:%d",jmid_inited);
 }
 
@@ -81,6 +82,28 @@ void CallbackUtil::onCallTimeUpdate(int threadType, int currentTime, int totalTi
         javaVM->DetachCurrentThread();
     }
 
+}
+
+void CallbackUtil::onCallRenderYUV(int width, int height, uint8_t *fy, uint8_t *fu, uint8_t *fv) {
+    JNIEnv *jniEnv;
+    if(javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+    {
+        ALOGD("call onCallRenderYUV worng");
+        return;
+    }
+    jbyteArray y=jniEnv->NewByteArray(width*height);
+    jniEnv->SetByteArrayRegion(y,0,width*height, reinterpret_cast<const jbyte *>(fy));
+    jbyteArray u=jniEnv->NewByteArray(width*height/4);
+    jniEnv->SetByteArrayRegion(u,0,width*height/4, reinterpret_cast<const jbyte *>(fu));
+    jbyteArray v=jniEnv->NewByteArray(width*height/4);
+    jniEnv->SetByteArrayRegion(v,0,width*height/4, reinterpret_cast<const jbyte *>(fv));
+
+    jniEnv->CallVoidMethod(jobj,jmid_renderYUV,width,height,y,u,v);
+
+    jniEnv->DeleteLocalRef(y);
+    jniEnv->DeleteLocalRef(u);
+    jniEnv->DeleteLocalRef(v);
+    javaVM->DetachCurrentThread();
 }
 
 

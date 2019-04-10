@@ -56,7 +56,7 @@ void FfmpegPlayer::init(const char *url) {
                     duration=audioPlayer->duration;
                 }
             }
-        if(pFormatCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO){
+        else if(pFormatCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO){
             if(videoPlayer==NULL){
                 videoPlayer=new VideoPlayer(this->playStatus,this->callbackUtil);
                 videoPlayer->streamIndex=i;
@@ -70,6 +70,7 @@ void FfmpegPlayer::init(const char *url) {
     }
     if(videoPlayer!=NULL){
         getCodecContext(videoPlayer->codecPar,&videoPlayer->avCodecContext);
+        ALOGD("zw_avCodecContext width:%d height:%d",videoPlayer->avCodecContext->width,videoPlayer->avCodecContext->height);
     }
     if(callbackUtil!=NULL && playStatus->getStatus()== true){
         callbackUtil->onCallInited(MAIN_THREAD);
@@ -119,8 +120,8 @@ void FfmpegPlayer::startDecode() {
             } else if(avPacket->stream_index==videoPlayer->streamIndex){
                 videoCount++;
                 videoPlayer->videoQueue->putAVPacket(avPacket);
-                ALOGD("zw_videoSize0:%d",videoPlayer->videoQueue->getQueueSize());
-                ALOGD("zw:解码视频第%d帧",videoCount);
+                //ALOGD("zw_videoSize0:%d",videoPlayer->videoQueue->getQueueSize());
+               // ALOGD("zw:解码视频第%d帧",videoCount);
             }
             else{
                 av_packet_free(&avPacket);
@@ -241,7 +242,7 @@ void FfmpegPlayer::seek(int64_t time_sec) {
 }
 
 int FfmpegPlayer::getCodecContext(AVCodecParameters *codecpar, AVCodecContext **avCodecContext) {
-    AVCodec *dec=avcodec_find_decoder(audioPlayer->codecPar->codec_id);
+    AVCodec *dec=avcodec_find_decoder(codecpar->codec_id);
     if(!dec){
         ALOGE("zw:can't find decoder");
         exit= true;
@@ -255,7 +256,7 @@ int FfmpegPlayer::getCodecContext(AVCodecParameters *codecpar, AVCodecContext **
         pthread_mutex_unlock(&init_mutex);
         return -1;
     }*/
-    if(avcodec_parameters_to_context(*avCodecContext,audioPlayer->codecPar)<0){
+    if(avcodec_parameters_to_context(*avCodecContext,codecpar)<0){
         ALOGE("zw:can't fill decodecctx");
         exit= true;
         pthread_mutex_unlock(&init_mutex);

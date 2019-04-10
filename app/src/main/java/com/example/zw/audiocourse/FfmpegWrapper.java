@@ -6,6 +6,7 @@ import com.example.zw.audiocourse.listener.OnInitListener;
 import com.example.zw.audiocourse.listener.OnLoadListener;
 import com.example.zw.audiocourse.listener.OnPauseResumeListener;
 import com.example.zw.audiocourse.listener.OnTimeUpdateListener;
+import com.example.zw.audiocourse.opengl.MyGLSurfaceView;
 import com.example.zw.audiocourse.util.TimeInfoBean;
 import com.example.zw.audiocourse.util.TimeUtil;
 
@@ -22,7 +23,7 @@ public class FfmpegWrapper {
     private TimeInfoBean timeInfoBean=null;
     private static String audioSource;//音频数据源
     private static boolean playSwitch=false;
-
+    private MyGLSurfaceView mGLSurfaceView;
 
     private OnTimeUpdateListener onTimeUpdateListener;
     public static FfmpegWrapper getWrapper(){
@@ -42,6 +43,9 @@ public class FfmpegWrapper {
             }
         });
         thread.start();
+    }
+    public void setGLSurfaceView(MyGLSurfaceView mGLSurfaceView) {
+        this.mGLSurfaceView = mGLSurfaceView;
     }
     //C++回调
     public void onCallInit(){
@@ -70,6 +74,12 @@ public class FfmpegWrapper {
             playSwitch=false;
             init(audioSource);
         }
+    }
+    public void onCallRenderYUV(int width,int height,byte[]y,byte[]u,byte[]v){
+        if(mGLSurfaceView!=null){
+            mGLSurfaceView.setYUVData(width, height, y, u, v);
+        }
+        Log.d("ZW_CALLBACK","获取到yuv");
     }
     public void setOnInitListener(OnInitListener onInitListener) {
         this.onInitListener = onInitListener;
@@ -141,4 +151,6 @@ public class FfmpegWrapper {
         playSwitch=true;
         stop();
     }
+
+
 }
