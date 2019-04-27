@@ -9,6 +9,11 @@ public:
     bool status= true;
     bool loadStatus= true;
     bool seekStatus= false;
+    bool pauseStatus= false;
+
+    bool getPauseStatus() const;
+
+    void setPauseStatus(bool pauseStatus);
 
     bool getSeekStatus() const;
 

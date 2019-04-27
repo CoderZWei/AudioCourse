@@ -33,3 +33,11 @@ bool PlayStatusUtil::getSeekStatus() const {
 void PlayStatusUtil::setSeekStatus(bool seekStatus) {
     PlayStatusUtil::seekStatus = seekStatus;
 }
+
+bool PlayStatusUtil::getPauseStatus() const {
+    return pauseStatus;
+}
+
+void PlayStatusUtil::setPauseStatus(bool pauseStatus) {
+    PlayStatusUtil::pauseStatus = pauseStatus;
+}

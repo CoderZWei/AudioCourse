@@ -30,6 +30,7 @@ class FfmpegPlayer{
         int duration=0;
         bool exit= false;
 
+
         FfmpegPlayer();
         ~FfmpegPlayer();
         void init(const char *url);

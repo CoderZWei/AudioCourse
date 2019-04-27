@@ -24,8 +24,8 @@ public class FfmpegWrapper {
     private static String audioSource;//音频数据源
     private static boolean playSwitch=false;
     private MyGLSurfaceView mGLSurfaceView;
-
     private OnTimeUpdateListener onTimeUpdateListener;
+
     public static FfmpegWrapper getWrapper(){
         if(ffmpegWrapper==null){
             synchronized (FfmpegWrapper.class){
@@ -68,6 +68,9 @@ public class FfmpegWrapper {
             timeInfoBean.setTotalTime(totalTime);
             onTimeUpdateListener.onTimeUpdate(timeInfoBean);
         }
+    }
+    int getDurationTime(){
+        return timeInfoBean.getTotalTime();
     }
     public void onCallSwitch(){
         if(playSwitch){

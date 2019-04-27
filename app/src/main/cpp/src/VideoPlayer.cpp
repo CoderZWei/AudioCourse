@@ -10,10 +10,11 @@ VideoPlayer::VideoPlayer(PlayStatusUtil *playStatusUtil,CallbackUtil *callbackUt
     this->playStatus=playStatusUtil;
     this->callbackUtil=callbackUtil;
     this->videoQueue=new QueueUtil(playStatus);
+    pthread_mutex_init(&codecMutex,NULL);
 }
 
 VideoPlayer::~VideoPlayer() {
-
+    pthread_mutex_destroy(&codecMutex);
 }
 void *playVideo(void*data){
     ALOGD("zw_Video:here");
@@ -23,9 +24,13 @@ void *playVideo(void*data){
        // if(videoPlayer->videoQueue->getAVPacket(avPacket)==0){//取packet成功
             //解码渲染
 
-            if(videoPlayer->playStatus->getSeekStatus()== true){
-              //  ALOGD("zw_Video:here1");
-                av_usleep(1000*100);
+            if(videoPlayer->playStatus->getSeekStatus()== true) {
+                //  ALOGD("zw_Video:here1");
+                av_usleep(1000 * 100);
+                continue;
+            }
+            if(videoPlayer->playStatus->getPauseStatus()== true){
+                av_usleep(1000 * 100);
                 continue;
             }
             if(videoPlayer->videoQueue->getQueueSize()==0){//加载状态
@@ -53,12 +58,13 @@ void *playVideo(void*data){
                 avPacket=NULL;
                 continue;
             }
-
+            pthread_mutex_lock(&videoPlayer->codecMutex);
             if(avcodec_send_packet(videoPlayer->avCodecContext,avPacket)!=0){
                // ALOGD("zw_Video:解码成功2");
                 av_packet_free(&avPacket);
                 av_free(avPacket);
                 avPacket=NULL;
+                pthread_mutex_unlock(&videoPlayer->codecMutex);
                 continue;
             }
 
@@ -71,6 +77,7 @@ void *playVideo(void*data){
                 av_packet_free(&avPacket);
                 av_free(avPacket);
                 avPacket=NULL;
+                pthread_mutex_unlock(&videoPlayer->codecMutex);
                 continue;
             }else{
                 ALOGD("zw_Video:解码成功");
@@ -78,6 +85,8 @@ void *playVideo(void*data){
             //视频帧格式为yuv420p，则无需转换
             if(avFrame->format==AV_PIX_FMT_YUV420P){
                 ALOGD("zw_frame:是yuv420p格式");
+                double diff=videoPlayer->getFrameDiffTime(avFrame);
+                av_usleep(videoPlayer->getDelayTime(diff) * 1000000);
                 videoPlayer->callbackUtil->onCallRenderYUV(
                         videoPlayer->avCodecContext->width,
                         videoPlayer->avCodecContext->height,
@@ -122,6 +131,7 @@ void *playVideo(void*data){
                     av_frame_free(&pFrameYUV420P);
                     av_free(pFrameYUV420P);
                     av_free(buffer);
+                    pthread_mutex_unlock(&videoPlayer->codecMutex);
                     continue;
                 }else{
                     ALOGD("zw_swsCtx初始化成功");
@@ -152,6 +162,7 @@ void *playVideo(void*data){
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
+            pthread_mutex_unlock(&videoPlayer->codecMutex);
         }
 
        // av_packet_free(&avPacket);
@@ -171,9 +182,11 @@ void VideoPlayer::release() {
         videoQueue=NULL;
     }
     if(avCodecContext!=NULL){
+        pthread_mutex_destroy(&codecMutex);
         avcodec_close(avCodecContext);
         avcodec_free_context(&avCodecContext);
         avCodecContext=NULL;
+        pthread_mutex_unlock(&codecMutex);
     }
     if(playStatus!=NULL){
         playStatus=NULL;
@@ -181,4 +194,50 @@ void VideoPlayer::release() {
     if(callbackUtil!=NULL){
         callbackUtil=NULL;
     }
+}
+
+double VideoPlayer::getFrameDiffTime(AVFrame *avFrame) {
+    double pts=av_frame_get_best_effort_timestamp(avFrame);
+    if(pts==AV_NOPTS_VALUE){
+        pts=0;
+    }
+    pts*=av_q2d(time_base);
+    if(pts>0){
+        clock=pts;
+    }
+    double diff=audioPlayer->clock-clock;
+    return diff;
+}
+
+double VideoPlayer::getDelayTime(double diff) {
+    if(diff>0.003){//音频快于视频
+        delayTime=delayTime*2/3;
+        if(delayTime<defaultDelayTime/2){
+            delayTime=defaultDelayTime*2/3;
+        }else if(delayTime>defaultDelayTime*2){
+            delayTime=defaultDelayTime*2;
+        }
+    }else if(diff<-0.003){//视频快于音频
+        delayTime=delayTime*3/2;
+        if(delayTime<defaultDelayTime/2){
+            delayTime=defaultDelayTime*2/3;
+        }else if(delayTime>defaultDelayTime*2){
+            delayTime=defaultDelayTime*2;
+        }
+    }
+    if(diff >= 0.5)
+    {
+        delayTime = 0;
+    }
+    else if(diff <= -0.5)
+    {
+        delayTime = defaultDelayTime * 2;
+    }
+
+    if(fabs(diff) >= 10)
+    {
+        delayTime = defaultDelayTime;
+    }
+    return delayTime;
+    return 0;
 }

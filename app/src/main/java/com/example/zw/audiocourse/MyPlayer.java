@@ -11,7 +11,7 @@ import com.example.zw.audiocourse.opengl.MyGLSurfaceView;
 public class MyPlayer {
 
     private FfmpegWrapper ffmpegWrapper=null;
-
+    private int duration=0;
     public void init(final String audioPath) {
         ffmpegWrapper=FfmpegWrapper.getWrapper();
 
@@ -75,6 +75,8 @@ public class MyPlayer {
     public void seek(int time_sec) {
         ffmpegWrapper.seek(time_sec);
     }
-
+    public int getDuration(){
+        return ffmpegWrapper.getDurationTime();
+    }
 
 }

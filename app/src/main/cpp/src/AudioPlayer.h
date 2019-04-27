@@ -54,6 +54,9 @@ public:
       double now_time;//当前播放时长
       double last_time;//上一次调用时间
 
+      pthread_mutex_t codecMutex;
+
+
      AudioPlayer();
      ~AudioPlayer();
      void play();

@@ -7,6 +7,7 @@
 
 #include "QueueUtil.h"
 #include "CallbackUtil.h"
+#include "AudioPlayer.h"
 extern "C"{
 #include "libavcodec/avcodec.h"
 #include <libavutil/imgutils.h>
@@ -24,11 +25,21 @@ public:
     AVRational time_base;
     pthread_t thread_play;
 
+    AudioPlayer *audioPlayer=NULL;
+    double clock=0;
+    double delayTime=0;
+    double defaultDelayTime=0.04;
+
+    pthread_mutex_t codecMutex;
+
     VideoPlayer(PlayStatusUtil *playStatusUtil,CallbackUtil *callbackUtil) ;
     ~VideoPlayer();
 
     void play();
+    double getFrameDiffTime(AVFrame *avFrame);
+    double getDelayTime(double diff);
     void release();
+
 };
 
 

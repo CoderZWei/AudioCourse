@@ -12,7 +12,7 @@ AudioPlayer::AudioPlayer() {
 }
 
 AudioPlayer::~AudioPlayer() {
-
+    pthread_mutex_destroy(&codecMutex);
 }
 
 AudioPlayer::AudioPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil,int sampleRate) {
@@ -21,7 +21,7 @@ AudioPlayer::AudioPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil,int sa
     this->sampleRate=sampleRate;
     this->audioQueue=new QueueUtil(playStatus);
     this->buffer=(uint8_t*)av_malloc(sampleRate*2*2);
-
+    pthread_mutex_init(&codecMutex,NULL);
 }
 void *decodePlay(void*data){
     AudioPlayer *audioPlayer=(AudioPlayer*)data;
@@ -68,11 +68,13 @@ int AudioPlayer::resampleAudio() {
             avPacket=NULL;
             continue;
         }
+        pthread_mutex_lock(&codecMutex);
         ret=avcodec_send_packet(avCodecContext,avPacket);//返回0表示成功
         if(ret!=0){
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket=NULL;
+            pthread_mutex_unlock(&codecMutex);
             continue;
         }
         avFrame=av_frame_alloc();
@@ -106,6 +108,7 @@ int AudioPlayer::resampleAudio() {
                 	swr_free(&swr_ctx);	
                 	swr_ctx=NULL;
                 }
+                pthread_mutex_unlock(&codecMutex);
                 continue;
             }
             //返回值是转换后的PCM的采样个数
@@ -137,6 +140,7 @@ int AudioPlayer::resampleAudio() {
                 swr_free(&swr_ctx);
                 swr_ctx=NULL;
             }
+            pthread_mutex_unlock(&codecMutex);
             break;//如果读成功就直接退出
         }else{
             av_packet_free(&avPacket);
@@ -145,6 +149,7 @@ int AudioPlayer::resampleAudio() {
             av_frame_free(&avFrame);
             av_free(avFrame);
             avFrame = NULL;
+            pthread_mutex_unlock(&codecMutex);
             continue;
         }
     }
@@ -324,9 +329,11 @@ void AudioPlayer::release() {
         buffer=NULL;
     }
     if(avCodecContext!=NULL){
+        pthread_mutex_lock(&codecMutex);
         avcodec_close(avCodecContext);
         avcodec_free_context(&avCodecContext);
         avCodecContext=NULL;
+        pthread_mutex_unlock(&codecMutex);
     }
     if(pcmPlayerPlay!=NULL){
         (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay,SL_PLAYSTATE_STOPPED);

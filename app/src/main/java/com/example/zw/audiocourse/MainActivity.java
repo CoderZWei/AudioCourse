@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,14 +25,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     private Button mBtn_start,mBtn_pause,mBtn_resume,mBtn_stop,mBtn_seek,mBtn_switch;
     private TextView mTextView_time;
     private MyGLSurfaceView mGLSurfaceView;
+    private SeekBar mSeekBar;
     //FfmpegWrapper ffmpegWrapper;
     private MyPlayer mPlayer=null;
     //private static final String audioPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"1.mp3";
-    private static final String videoPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"input.mp4";
+    private static final String videoPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"01.avi";
+    private int seekPosition;
+    private boolean seekStatus=false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +105,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(mPlayer!=null){
             mPlayer.setGLSurfaceView(mGLSurfaceView);
         }
+        mSeekBar=(SeekBar)findViewById(R.id.mSeekBar);
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                seekPosition=progress*mPlayer.getDuration()/100;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                seekStatus=true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mPlayer.seek(seekPosition);
+                seekStatus=false;
+            }
+        });
     }
     Handler handler=new Handler(){
         @Override
@@ -110,6 +132,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 TimeInfoBean timeInfoBean=(TimeInfoBean)msg.obj;
                 mTextView_time.setText(TimeUtil.secdsToDateFormat(timeInfoBean.getTotalTime(), timeInfoBean.getTotalTime())
                         + "/" + TimeUtil.secdsToDateFormat(timeInfoBean.getCurrentTime(), timeInfoBean.getTotalTime()));
+                if(seekStatus==false && timeInfoBean.getTotalTime()>0){
+                    mSeekBar.setProgress(timeInfoBean.getCurrentTime()*100/timeInfoBean.getTotalTime());
+                }
             }
         }
     };
