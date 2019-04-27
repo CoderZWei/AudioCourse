@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //FfmpegWrapper ffmpegWrapper;
     private MyPlayer mPlayer=null;
     //private static final String audioPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"1.mp3";
-    private static final String videoPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"01.avi";
+    private static final String videoPath=Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"demo.mov";
     private int seekPosition;
     private boolean seekStatus=false;
     @Override

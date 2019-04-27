@@ -78,6 +78,55 @@ void FfmpegPlayer::init(const char *url) {
     if(videoPlayer!=NULL){
         getCodecContext(videoPlayer->codecPar,&videoPlayer->avCodecContext);
         ALOGD("zw_avCodecContext width:%d height:%d",videoPlayer->avCodecContext->width,videoPlayer->avCodecContext->height);
+
+        supportMediaCodec= false;
+        const char *codecName=((const AVCodec*)videoPlayer->avCodecContext->codec)->name;
+        ALOGD("zw_codecName:%s",codecName);
+        if(callbackUtil!=NULL){
+            supportMediaCodec=callbackUtil->onCallSupportVideo(codecName);
+            if(supportMediaCodec== true){
+                ALOGD("当前设备支持硬解码此视频");
+                if(strcasecmp(codecName,"h264")==0){
+                    bsFilter=av_bsf_get_by_name("h264_mp4toannexb");
+                } else if(strcasecmp(codecName,"h265")==0){
+                    bsFilter=av_bsf_get_by_name("hevc_mp4toannexb");
+                }
+                if(bsFilter==NULL){
+                    supportMediaCodec= false;
+                }
+                if(av_bsf_alloc(bsFilter,&videoPlayer->abs_ctx)!=0){
+                    supportMediaCodec== false;
+                }
+                if(avcodec_parameters_copy(videoPlayer->abs_ctx->par_in,videoPlayer->codecPar)<0){
+                    av_bsf_free(&videoPlayer->abs_ctx);
+                    videoPlayer->abs_ctx=NULL;
+                    supportMediaCodec== false;
+                }
+                if(av_bsf_init(videoPlayer->abs_ctx)!=0){
+                    av_bsf_free(&videoPlayer->abs_ctx);
+                    videoPlayer->abs_ctx=NULL;
+                    supportMediaCodec= false;
+                }
+                videoPlayer->abs_ctx->time_base_in=videoPlayer->time_base;
+            }
+            if(supportMediaCodec== true){
+                videoPlayer->codecType=CODEC_MEDIACODEC;
+                callbackUtil->onCallInitMediaCodec(
+                        codecName,
+                        videoPlayer->avCodecContext->width,
+                        videoPlayer->avCodecContext->height,
+                        videoPlayer->avCodecContext->extradata_size,
+                        videoPlayer->avCodecContext->extradata_size,
+                        videoPlayer->avCodecContext->extradata,
+                        videoPlayer->avCodecContext->extradata
+                        );
+            } else{
+                videoPlayer->codecType=CODEC__YUV;
+            }
+        } else{
+            ALOGD("callbackutil is NULL");
+        }
+
     }
     if(callbackUtil!=NULL && playStatus->getStatus()== true){
         callbackUtil->onCallInited(MAIN_THREAD);
@@ -103,6 +152,8 @@ void FfmpegPlayer::startDecode() {
         ALOGE("zw:vidioPlayer is null");
         return;
     }
+
+
     audioPlayer->play();
     videoPlayer->audioPlayer=audioPlayer;
     videoPlayer->play();
@@ -146,7 +197,10 @@ void FfmpegPlayer::startDecode() {
                     av_usleep(1000 * 100);
                     continue;
                 } else{
-                    playStatus->setStatus(false);
+                    if(playStatus->getSeekStatus()== false){
+                        av_usleep(1000*100);
+                        playStatus->setStatus(false);
+                    }
                     break;
                 }
             }

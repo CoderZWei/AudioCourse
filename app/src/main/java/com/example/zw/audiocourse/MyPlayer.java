@@ -12,6 +12,7 @@ public class MyPlayer {
 
     private FfmpegWrapper ffmpegWrapper=null;
     private int duration=0;
+
     public void init(final String audioPath) {
         ffmpegWrapper=FfmpegWrapper.getWrapper();
 
@@ -58,6 +59,7 @@ public class MyPlayer {
         }
         ffmpegWrapper.setGLSurfaceView(mGLSurfaceView);
     }
+
     public void pause() {
         ffmpegWrapper.pause();
     }

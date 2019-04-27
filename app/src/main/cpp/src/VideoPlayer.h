@@ -8,6 +8,8 @@
 #include "QueueUtil.h"
 #include "CallbackUtil.h"
 #include "AudioPlayer.h"
+#define CODEC__YUV 0
+#define CODEC_MEDIACODEC 1
 extern "C"{
 #include "libavcodec/avcodec.h"
 #include <libavutil/imgutils.h>
@@ -31,12 +33,14 @@ public:
     double defaultDelayTime=0.04;
 
     pthread_mutex_t codecMutex;
+    int codecType=CODEC__YUV;
+    AVBSFContext *abs_ctx=NULL;
 
     VideoPlayer(PlayStatusUtil *playStatusUtil,CallbackUtil *callbackUtil) ;
     ~VideoPlayer();
 
     void play();
-    double getFrameDiffTime(AVFrame *avFrame);
+    double getFrameDiffTime(AVFrame *avFrame,AVPacket *avPacket);
     double getDelayTime(double diff);
     void release();
 

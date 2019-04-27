@@ -29,7 +29,10 @@ class FfmpegPlayer{
         pthread_mutex_t seek_mutex;
         int duration=0;
         bool exit= false;
-
+        //视频相关
+        VideoPlayer *videoPlayer=NULL;
+        bool supportMediaCodec= false;
+        const AVBitStreamFilter *bsFilter=NULL;
 
         FfmpegPlayer();
         ~FfmpegPlayer();
@@ -42,8 +45,6 @@ class FfmpegPlayer{
         void seek(int64_t time_sec);
         //要用二级指针，因为avCodecContext是在局部函数里新建的
         int getCodecContext(AVCodecParameters *codecpar,AVCodecContext **avCodecContext);
-        //视频相关
-        VideoPlayer *videoPlayer=NULL;
 
 
 

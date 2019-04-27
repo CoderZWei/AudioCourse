@@ -5,6 +5,8 @@ import android.opengl.GLSurfaceView;
 import android.support.v4.app.NavUtils;
 import android.util.AttributeSet;
 
+import com.example.zw.audiocourse.listener.OnRenderListener;
+
 public class MyGLSurfaceView extends GLSurfaceView {
     private MyRender mRender;
     public MyGLSurfaceView(Context context) {
@@ -19,11 +21,20 @@ public class MyGLSurfaceView extends GLSurfaceView {
         setRenderer(mRender);
         //主动刷新模式
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        mRender.setOnRenderListener(new OnRenderListener() {
+            @Override
+            public void onRender() {
+                requestRender();
+            }
+        });
     }
     public void setYUVData(int width,int height,byte[]y,byte[]u,byte[]v){
         if(mRender!=null){
             mRender.setYUVRenderData(width,height,y,u,v);
             requestRender();
         }
+    }
+    public MyRender getRender(){
+        return mRender;
     }
 }
