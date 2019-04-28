@@ -6,7 +6,7 @@
 #define AUDIOCOURSE_PLAYSTATUSUTIL_H
 class PlayStatusUtil{
 public:
-    bool status= true;
+    bool playStatus= true;
     bool loadStatus= true;
     bool seekStatus= false;
     bool pauseStatus= false;
@@ -23,8 +23,8 @@ public:
 
     void setLoadStatus(bool loadStatus);
 
-    bool getStatus();
-    void setStatus(bool status);
+    bool getPlayStatus();
+    void setPlayStatus(bool playStatus);
 
     PlayStatusUtil();
     ~PlayStatusUtil();

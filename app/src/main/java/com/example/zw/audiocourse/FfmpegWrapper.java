@@ -2,6 +2,7 @@ package com.example.zw.audiocourse;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
+import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.Surface;
@@ -161,12 +162,13 @@ public class FfmpegWrapper {
     public native void cpp_seek(int time_sec);
 
 
-
     public void stop() {
+        timeInfoBean=null;
         new Thread(new Runnable() {
             @Override
             public void run() {
                 cpp_stop();
+                releaseMediaCodec();
             }
         }).start();
     }
@@ -203,9 +205,13 @@ public class FfmpegWrapper {
 
     private void releaseMediaCodec(){
         if(mediaCodec!=null){
-            mediaCodec.flush();
-            mediaCodec.stop();
-            mediaCodec.release();
+            try {
+                mediaCodec.flush();
+                mediaCodec.stop();
+                mediaCodec.release();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
             mediaCodec=null;
             mediaFormat=null;
             bufferInfo=null;
@@ -213,17 +219,21 @@ public class FfmpegWrapper {
     }
     public void onCallDecodeAVPacket(int dataSize,byte[]data){
         if(mSurface!=null && dataSize>0 && data!=null && mediaCodec!=null){
-            int inputBufferIndex=mediaCodec.dequeueInputBuffer(10);
-            if(inputBufferIndex>=0){
-                ByteBuffer byteBuffer=mediaCodec.getInputBuffers()[inputBufferIndex];
-                byteBuffer.clear();
-                byteBuffer.put(data);
-                mediaCodec.queueInputBuffer(inputBufferIndex,0,dataSize,0,0);
-            }
-            int outputBufferIndex=mediaCodec.dequeueOutputBuffer(bufferInfo,10);
-            while (outputBufferIndex>=0){
-                mediaCodec.releaseOutputBuffer(outputBufferIndex,true);
-                outputBufferIndex=mediaCodec.dequeueOutputBuffer(bufferInfo,10);
+            try {
+                int inputBufferIndex=mediaCodec.dequeueInputBuffer(10);
+                if(inputBufferIndex>=0){
+                    ByteBuffer byteBuffer=mediaCodec.getInputBuffers()[inputBufferIndex];
+                    byteBuffer.clear();
+                    byteBuffer.put(data);
+                    mediaCodec.queueInputBuffer(inputBufferIndex,0,dataSize,0,0);
+                }
+                int outputBufferIndex=mediaCodec.dequeueOutputBuffer(bufferInfo,10);
+                while (outputBufferIndex>=0){
+                    mediaCodec.releaseOutputBuffer(outputBufferIndex,true);
+                    outputBufferIndex=mediaCodec.dequeueOutputBuffer(bufferInfo,10);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
             }
         }
     }

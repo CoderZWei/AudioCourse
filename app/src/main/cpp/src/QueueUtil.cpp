@@ -24,7 +24,7 @@ void QueueUtil::putAVPacket(AVPacket *packet) {
 
 int QueueUtil::getAVPacket(AVPacket *packet) {
     pthread_mutex_lock(&mutexPacket);//加锁
-    while (this->playStatusUtil!=NULL && this->playStatusUtil->getStatus()!= false){
+    while (this->playStatusUtil!=NULL && this->playStatusUtil->getPlayStatus()!= false){
         if(this->queuePacket.size()>0){
             AVPacket *avPacket=this->queuePacket.front();
             //产生一个新的引用，第一个参数是dst,第二个参数是src,返回0表示成功
@@ -52,7 +52,7 @@ int QueueUtil::getQueueSize() {
 }
 
 void QueueUtil::clearAVPacket() {
-   // pthread_cond_signal(&condPacket);
+    pthread_cond_signal(&condPacket);
     pthread_mutex_lock(&mutexPacket);
     while (!queuePacket.empty()){
         AVPacket *packet=queuePacket.front();
@@ -62,4 +62,8 @@ void QueueUtil::clearAVPacket() {
         packet=NULL;
     }
     pthread_mutex_unlock(&mutexPacket);
+}
+
+void QueueUtil::noticeQueue() {
+    pthread_cond_signal(&condPacket);
 }

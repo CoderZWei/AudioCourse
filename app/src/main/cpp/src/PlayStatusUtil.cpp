@@ -10,12 +10,12 @@ PlayStatusUtil::~PlayStatusUtil() {
 
 }
 
-bool PlayStatusUtil::getStatus() {
-    return status;
+bool PlayStatusUtil::getPlayStatus() {
+    return playStatus;
 }
 
-void PlayStatusUtil::setStatus(bool status) {
-    PlayStatusUtil::status = status;
+void PlayStatusUtil::setPlayStatus(bool status) {
+    PlayStatusUtil::playStatus = status;
 }
 
 bool PlayStatusUtil::getLoadStatus(){

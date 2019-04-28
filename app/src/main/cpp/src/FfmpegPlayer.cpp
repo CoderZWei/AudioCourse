@@ -21,17 +21,26 @@ FfmpegPlayer::FfmpegPlayer(PlayStatusUtil *pUtil,CallbackUtil *callbackUtil) {
     pthread_mutex_init(&seek_mutex,NULL);
     exit= false;
 }
-
+int avformat_callback(void *ctx)
+{
+    FfmpegPlayer *fFmpeg = (FfmpegPlayer *) ctx;
+    if(fFmpeg->playStatus->getPlayStatus()== false)
+    {
+        return AVERROR_EOF;
+    }
+    return 0;
+}
 void FfmpegPlayer::init(const char *url) {
     pthread_mutex_lock(&init_mutex);
     //audioPlayer=new AudioPlayer(this->playStatus,44100);
     this->url=url;
     ALOGD("zw:url_%s",this->url);
     av_register_all();
-
     avformat_network_init();
-
     pFormatCtx=avformat_alloc_context();
+    pFormatCtx->interrupt_callback.callback=avformat_callback;
+    pFormatCtx->interrupt_callback.opaque=this;
+
     if(avformat_open_input(&pFormatCtx,this->url,NULL,NULL)!=0){
         ALOGE("zw:can't open url:%s",this->url);
         exit= true;
@@ -84,9 +93,11 @@ void FfmpegPlayer::init(const char *url) {
         ALOGD("zw_codecName:%s",codecName);
         if(callbackUtil!=NULL){
             supportMediaCodec=callbackUtil->onCallSupportVideo(codecName);
+            //为AVPacket添加解码头信息
             if(supportMediaCodec== true){
                 ALOGD("当前设备支持硬解码此视频");
-                if(strcasecmp(codecName,"h264")==0){
+                //1、找到相应解码器的过滤器
+                if(strcasecmp(codecName,"h264")==0){//忽略大小写比较字符串
                     bsFilter=av_bsf_get_by_name("h264_mp4toannexb");
                 } else if(strcasecmp(codecName,"h265")==0){
                     bsFilter=av_bsf_get_by_name("hevc_mp4toannexb");
@@ -94,14 +105,17 @@ void FfmpegPlayer::init(const char *url) {
                 if(bsFilter==NULL){
                     supportMediaCodec= false;
                 }
+                //2、过滤器分配内存
                 if(av_bsf_alloc(bsFilter,&videoPlayer->abs_ctx)!=0){
                     supportMediaCodec== false;
                 }
+                //3、添加解码器属性
                 if(avcodec_parameters_copy(videoPlayer->abs_ctx->par_in,videoPlayer->codecPar)<0){
                     av_bsf_free(&videoPlayer->abs_ctx);
                     videoPlayer->abs_ctx=NULL;
                     supportMediaCodec== false;
                 }
+                //4、初始化过滤器上下文
                 if(av_bsf_init(videoPlayer->abs_ctx)!=0){
                     av_bsf_free(&videoPlayer->abs_ctx);
                     videoPlayer->abs_ctx=NULL;
@@ -116,8 +130,8 @@ void FfmpegPlayer::init(const char *url) {
                         videoPlayer->avCodecContext->width,
                         videoPlayer->avCodecContext->height,
                         videoPlayer->avCodecContext->extradata_size,
-                        videoPlayer->avCodecContext->extradata_size,
-                        videoPlayer->avCodecContext->extradata,
+                        videoPlayer->avCodecContext->extradata_size,//扩展数据的size
+                        videoPlayer->avCodecContext->extradata,//扩展数据
                         videoPlayer->avCodecContext->extradata
                         );
             } else{
@@ -126,9 +140,9 @@ void FfmpegPlayer::init(const char *url) {
         } else{
             ALOGD("callbackutil is NULL");
         }
-
+       // videoPlayer->codecType=CODEC__YUV;
     }
-    if(callbackUtil!=NULL && playStatus->getStatus()== true){
+    if(callbackUtil!=NULL && playStatus->getPlayStatus()== true){
         callbackUtil->onCallInited(MAIN_THREAD);
     } else{
         exit= true;
@@ -140,7 +154,7 @@ void FfmpegPlayer::init(const char *url) {
 void *decodeFFmpeg(void *data){
     FfmpegPlayer *ffmpegPlayer=(FfmpegPlayer*)data;
     ffmpegPlayer->startDecode();
-    pthread_exit(&ffmpegPlayer->decodeThread);
+  //  pthread_exit(&ffmpegPlayer->decodeThread);
 }
 
 void FfmpegPlayer::startDecode() {
@@ -158,7 +172,7 @@ void FfmpegPlayer::startDecode() {
     videoPlayer->audioPlayer=audioPlayer;
     videoPlayer->play();
     int audioCount=0,videoCount=0;
-    while (playStatus!=NULL && playStatus->getStatus()== true ){
+    while (playStatus!=NULL && playStatus->getPlayStatus()== true ){
         if(playStatus->getSeekStatus()== true){//当前是seek状态时，停止解码
             av_usleep(1000 * 100);
             continue;
@@ -191,7 +205,7 @@ void FfmpegPlayer::startDecode() {
             av_packet_free(&avPacket);
             av_free(avPacket);
 
-            while (playStatus!=NULL && playStatus->getStatus()== true){
+            while (playStatus!=NULL && playStatus->getPlayStatus()== true){
                 //因为队列里可能有缓存，所以不能直接退出，而是要等待
                 if(audioPlayer->audioQueue->getQueueSize()>0){
                     av_usleep(1000 * 100);
@@ -199,7 +213,7 @@ void FfmpegPlayer::startDecode() {
                 } else{
                     if(playStatus->getSeekStatus()== false){
                         av_usleep(1000*100);
-                        playStatus->setStatus(false);
+                        playStatus->setPlayStatus(false);
                     }
                     break;
                 }
@@ -227,6 +241,7 @@ void FfmpegPlayer::start() {
 　　第三个参数是线程运行函数的地址。
 　　最后一个参数是运行函数的参数。
      */
+    //pthread_exit(&decodeThread);
     pthread_create(&decodeThread,NULL,decodeFFmpeg,this);
 }
 
@@ -255,7 +270,8 @@ void FfmpegPlayer::release() {
         return;
     }
      */
-    playStatus->setStatus(false);
+    playStatus->setPlayStatus(false);
+    pthread_join(decodeThread,NULL);
     pthread_mutex_lock(&init_mutex);
     int sleepCount=0;
     while (exit== false){

@@ -17,9 +17,8 @@ VideoPlayer::~VideoPlayer() {
     pthread_mutex_destroy(&codecMutex);
 }
 void *playVideo(void*data){
-    ALOGD("zw_Video:here");
     VideoPlayer *videoPlayer= static_cast<VideoPlayer*>(data);
-    while (videoPlayer->playStatus!=NULL && videoPlayer->playStatus->getStatus()== true){
+    while (videoPlayer->playStatus!=NULL && videoPlayer->playStatus->getPlayStatus()== true){
         //AVPacket *avPacket=av_packet_alloc();
        // if(videoPlayer->videoQueue->getAVPacket(avPacket)==0){//取packet成功
             //解码渲染
@@ -50,7 +49,6 @@ void *playVideo(void*data){
            //ALOGD("zw_videoSize:%d",videoPlayer->videoQueue->getQueueSize());
 
            AVPacket *avPacket=av_packet_alloc();
-
             if(videoPlayer->videoQueue->getAVPacket(avPacket)!=0){//取packet失败
                 //ALOGD("zw_Video:解码成功1");
                 av_packet_free(&avPacket);
@@ -61,6 +59,7 @@ void *playVideo(void*data){
             if(videoPlayer->codecType==CODEC_MEDIACODEC){
                 //硬解码
                 //ALOGD("硬解码视频");
+                //5、通过过滤器对AVPacket处理
                 if(av_bsf_send_packet(videoPlayer->abs_ctx,avPacket)!=0){
                     av_packet_free(&avPacket);
                     av_free(avPacket);
@@ -71,6 +70,7 @@ void *playVideo(void*data){
                     ALOGD("开始硬解码");
                     double diff=videoPlayer->getFrameDiffTime(NULL,avPacket);
                     av_usleep(videoPlayer->getDelayTime(diff)*1000000);
+                    //
                     videoPlayer->callbackUtil->onCallDecodeAVPacket(avPacket->size,avPacket->data);
                     av_packet_free(&avPacket);
                     av_free(avPacket);
@@ -78,7 +78,7 @@ void *playVideo(void*data){
                 }
                 avPacket=NULL;
 
-            }else{
+            }else if(videoPlayer->codecType==CODEC__YUV){
                 //软解码
                 pthread_mutex_lock(&videoPlayer->codecMutex);
                 if(avcodec_send_packet(videoPlayer->avCodecContext,avPacket)!=0){
@@ -106,7 +106,7 @@ void *playVideo(void*data){
                 }
                 //视频帧格式为yuv420p，则无需转换
                 if(avFrame->format==AV_PIX_FMT_YUV420P){
-                    ALOGD("zw_frame:是yuv420p格式");
+                    //ALOGD("zw_frame:是yuv420p格式");
                     double diff=videoPlayer->getFrameDiffTime(avFrame,NULL);
                     av_usleep(videoPlayer->getDelayTime(diff) * 1000000);
                     videoPlayer->callbackUtil->onCallRenderYUV(
@@ -117,16 +117,16 @@ void *playVideo(void*data){
                             avFrame->data[2]
                     );
                 }else{
-                    ALOGD("zw_frame:不是yuv420p格式");
+                    //ALOGD("zw_frame:不是yuv420p格式");
                     AVFrame *pFrameYUV420P=av_frame_alloc();
-                    ALOGD("zw_width:%d height:%d",videoPlayer->avCodecContext->width,videoPlayer->avCodecContext->height);
+                    //ALOGD("zw_width:%d height:%d",videoPlayer->avCodecContext->width,videoPlayer->avCodecContext->height);
                     int num=av_image_get_buffer_size(
                             AV_PIX_FMT_YUV420P,
                             videoPlayer->avCodecContext->width,
                             videoPlayer->avCodecContext->height,
                             1
                     );
-                    ALOGD("zw_num:%d",num);
+                    //ALOGD("zw_num:%d",num);
                     uint8_t *buffer= static_cast<uint8_t *>(av_malloc(num* sizeof(uint8_t)));
                     av_image_fill_arrays(
                             pFrameYUV420P->data,
@@ -187,19 +187,26 @@ void *playVideo(void*data){
                 pthread_mutex_unlock(&videoPlayer->codecMutex);
             }
     }
-
+    //change
+    return 0;
        // av_packet_free(&avPacket);
         //av_free(avPacket);
         //avPacket=NULL;
     //}
 
-    pthread_exit(&videoPlayer->thread_play);
+    //pthread_exit(&videoPlayer->thread_play);
 }
 void VideoPlayer::play() {
-    pthread_create(&thread_play,NULL,playVideo,this);
+    if(playStatus!=NULL && playStatus->getPlayStatus()== true){
+        pthread_create(&thread_play,NULL,playVideo,this);
+    }
 }
 
 void VideoPlayer::release() {
+    if(videoQueue!=NULL){
+        videoQueue->noticeQueue();
+    }
+    pthread_join(thread_play,NULL);
     if(videoQueue!=NULL){
         delete(videoQueue);
         videoQueue=NULL;

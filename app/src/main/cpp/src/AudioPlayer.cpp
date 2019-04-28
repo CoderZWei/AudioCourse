@@ -27,10 +27,15 @@ void *decodePlay(void*data){
     AudioPlayer *audioPlayer=(AudioPlayer*)data;
     audioPlayer->initOpenSLES();
     //audioPlayer->resampleAudio();
-    pthread_exit(&audioPlayer->thread_play);
+    //change
+    return 0;
+    //pthread_exit(&audioPlayer->thread_play);
 }
 void AudioPlayer::play() {
-    pthread_create(&thread_play,NULL,decodePlay,this);
+    if(playStatus!=NULL && playStatus->getPlayStatus()== true){
+        pthread_create(&thread_play,NULL,decodePlay,this);
+    }
+
 }
 //FILE *outFile=fopen("/storage/emulated/0/myMusic.pcm","w");
 int AudioPlayer::resampleAudio() {
@@ -40,10 +45,7 @@ int AudioPlayer::resampleAudio() {
         ALOGD("zw:outfile is NULL");
     }
     */
-    if(callbackUtil==NULL){
-        ALOGD("zw_callback isNULL");
-    }
-    while (playStatus!=NULL && playStatus->getStatus()== true){
+    while (playStatus!=NULL && playStatus->getPlayStatus()== true){
         if(playStatus->getSeekStatus()== true){//seek状态
             av_usleep(1000*100);
             continue;
@@ -299,12 +301,11 @@ void AudioPlayer::resume() {
 }
 
 void AudioPlayer::release() {
-    if(playStatus!=NULL){
-        playStatus=NULL;
+
+    if(audioQueue!=NULL){
+        audioQueue->noticeQueue();
     }
-    if(callbackUtil!=NULL){
-        callbackUtil=NULL;
-    }
+    pthread_join(thread_play,NULL);
     if(audioQueue!=NULL){
             delete(audioQueue);
             audioQueue=NULL;
@@ -326,6 +327,7 @@ void AudioPlayer::release() {
         engineEngine=NULL;
     }
     if(buffer!=NULL){
+        free(buffer);
         buffer=NULL;
     }
     if(avCodecContext!=NULL){
@@ -338,7 +340,12 @@ void AudioPlayer::release() {
     if(pcmPlayerPlay!=NULL){
         (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay,SL_PLAYSTATE_STOPPED);
     }
-
+    if(playStatus!=NULL){
+        playStatus=NULL;
+    }
+    if(callbackUtil!=NULL){
+        callbackUtil=NULL;
+    }
 }
 
 
